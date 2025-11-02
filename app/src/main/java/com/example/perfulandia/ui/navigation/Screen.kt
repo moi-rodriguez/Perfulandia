@@ -6,14 +6,10 @@ import kotlin.text.replace
 sealed class Screen(val route: String) {
     // Rutas simples (sin argumentos): Usamos 'data object' es un singleton seguro de tipos
 
-    data object Home : Screen("home_page")          // Ruta a la pantalla de Inicio
-    data object Profile : Screen("profile_page")    // Ruta a la pantalla de Perfil
-
-    /*
-        Ejemplos de Rutas con Argumentos (no usados en este ejercicio, pero importante)
-        Usamos 'data class' para encapsular los argumentos.
-        Esto asegura que, al navegar, los argumentos correctos sean pasados y tipados.
-    */
+    data object Login : Screen("Login")
+    data object Register : Screen("Register")
+    data object Home : Screen("Home")
+    data object Profile : Screen("Profile")
 
     /**
      * Ejemplo de una ruta a una pantalla de detalles que requiere un 'ItemId'.
