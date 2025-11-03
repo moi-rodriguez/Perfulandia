@@ -15,6 +15,7 @@
 El proyecto sigue una estructura basada en el patrón **MVVM (Model - View - ViewModel)**.
 
 - **Estructura carpetas**
+  
   /ui
   
     ┣ /screens → Contiene las pantallas principales (Login, Register, Profile, Home)
