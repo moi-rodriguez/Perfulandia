@@ -16,12 +16,19 @@ El proyecto sigue una estructura basada en el patrón **MVVM (Model - View - Vie
 
 - **Estructura carpetas**
   /ui
-  ┣ /screens → Contiene las pantallas principales (Login, Register, Profile, Home)
-  ┣ /components → Elementos reutilizables como botones, tarjetas y diálogos
-  ┣ /theme → Colores, tipografía y estilos
+  
+    ┣ /screens → Contiene las pantallas principales (Login, Register, Profile, Home)
+  
+    ┣ /components → Elementos reutilizables como botones, tarjetas y diálogos
+  
+    ┣ /theme → Colores, tipografía y estilos
+  
   /viewmodel → Maneja el estado y la lógica de cada pantalla
+  
   /model → Clases de datos del usuario y entidades
+  
   /repository → Fuente de datos y persistencia local
+  
   /navigation → Controla el flujo de pantallas dentro de la app
   
 - **Gestión de estado**:
