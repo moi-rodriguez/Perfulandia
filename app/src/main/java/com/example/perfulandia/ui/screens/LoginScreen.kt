@@ -120,7 +120,9 @@ fun LoginScreen(navController: NavController) {
         TextButton(
             onClick = {
                 // Navegar a la pantalla de registro
-                // navController.navigate(Screen.Register.route)
+                navController.navigate(Screen.Register.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                }
             }
         ) {
             Text("¿No tienes una cuenta? Regístrate")

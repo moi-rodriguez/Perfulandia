@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -34,7 +35,18 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             // Añadimos una barra superior para el título
-            TopAppBar(title = { Text("Perfulandia") })
+            TopAppBar(
+                title = { Text("Perfulandia") },
+                actions = {
+                    // Botón con el ícono del carrito
+                    IconButton(onClick = { /* Navegar a la pantalla del carrito */ }) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Carrito de compras"
+                        )
+                    }
+                }
+            )
         },
         bottomBar = {
             NavigationBar {

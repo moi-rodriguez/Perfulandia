@@ -27,6 +27,10 @@ fun ProfileScreen(
     var selectedItem by remember { mutableIntStateOf(1) }
 
     Scaffold(
+        topBar = {
+            // Es bueno añadir un TopAppBar para dar contexto
+            TopAppBar(title = { Text("Mi Perfil") })
+        },
         bottomBar = {
             NavigationBar {
                 items.forEachIndexed { index, screen ->
@@ -34,7 +38,9 @@ fun ProfileScreen(
                         selected = selectedItem == index,
                         onClick = {
                             selectedItem = index
-                            viewModel.navigateTo(screen)
+                            if (navController.currentDestination?.route != screen.route) {
+                                navController.navigate(screen.route)
+                            }
                         },
                         label = { Text(screen.route) },
                         icon = {

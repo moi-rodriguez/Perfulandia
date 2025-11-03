@@ -149,8 +149,8 @@ fun RegisterScreen(navController: NavController) {
                     // Aquí iría tu lógica de registro (ej. llamar a un ViewModel)
                     // viewModel.register(name, address, email, password)
 
-                    // Usar el navController para navegar después del registro
-                    navController.navigate(Screen.Login.route) {
+                    // Entrar a HOME
+                    navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }
@@ -158,6 +158,19 @@ fun RegisterScreen(navController: NavController) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Registrarse")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(
+            onClick = {
+                // Navegar de regreso a Login
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                }
+            }
+        ) {
+            Text("¿Ya tienes una cuenta? Inicia sesión")
         }
     }
 }
