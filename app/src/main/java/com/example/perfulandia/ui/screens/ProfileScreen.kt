@@ -2,11 +2,8 @@ package com.example.perfulandia.ui.screens
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.perfulandia.viewmodel.ProfileViewModelFactory
-import android.app.Application
 import android.Manifest
 import android.content.Context
 import android.net.Uri
@@ -32,6 +29,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.perfulandia.ui.components.ImagePickerDialog
 import com.example.perfulandia.ui.navigation.Screen
+import com.example.perfulandia.viewmodel.ProfileUiState
 import com.example.perfulandia.viewmodel.ProfileViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
@@ -39,68 +37,102 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.listOf
 
-// --- ViewModel y State se han movido a sus propios archivos ---
-// ya no se definen aquí
 
 // --- Composable Principal ---
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    profileViewModel: ProfileViewModel = viewModel(
-        factory = ProfileViewModelFactory(LocalContext.current.applicationContext as Application)
-    )
+    uiState: ProfileUiState
+    //onRefresh: () -> Unit
 ) {
+    val context = LocalContext.current
+    val viewModel: ProfileViewModel = viewModel()
+    var showImagePicker by remember { mutableStateOf(false) } // showdialog
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) } // tempuri
     val items = listOf(Screen.Home, Screen.Profile)
     var selectedItem by remember { mutableIntStateOf(1) }
-    val uiState by profileViewModel.uiState.collectAsState()
-    val context = LocalContext.current
-    var showDialog by remember { mutableStateOf(false) }
-    var tempUri by remember { mutableStateOf<Uri?>(null) }
+    //val uiState by profileViewModel.uiState.collectAsState()
+
 
     // --- Permisos ---
-    val permissionsToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        arrayOf(Manifest.permission.CAMERA)
+    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        listOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_MEDIA_IMAGES
+        )
     } else {
-        arrayOf(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE)
-    }
-    val permissionsState = rememberMultiplePermissionsState(permissions = permissionsToRequest.toList())
-
-    // --- Lanzadores de Actividades ---
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri: Uri? ->
-            uri?.let {
-                profileViewModel.onImageChange(it)
-            }
-        }
-    )
-
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture(),
-        onResult = { success: Boolean ->
-            if (success) {
-                tempUri?.let {
-                    profileViewModel.onImageChange(it)
-                }
-            }
-        }
-    )
-
-    // --- Funciones de Utilidad ---
-    fun createImageFile(context: Context): Uri {
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val imageFileName = "JPEG_" + timeStamp + "_"
-        val storageDir = context.externalCacheDir
-        val image = File.createTempFile(imageFileName, ".jpg", storageDir)
-        return FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.provider",
-            image
+        listOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_EXTERNAL_STORAGE
         )
     }
+
+    val permissionsState = rememberMultiplePermissionsState(permissions)
+
+    // --- Lanzadores de Actividades ---
+
+    // launcher para capturar foto con cámara
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempCameraUri != null) {
+            viewModel.updateAvatar(tempCameraUri)
+        }
+    }
+
+    // launcher para seleccionar imagen de galería
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.updateAvatar(it)
+        }
+    }
+
+    // cuadro de diálogo
+    if (showImagePicker) {
+        // se creó en ui.components
+        ImagePickerDialog(
+            onDismiss = { showImagePicker = false },
+            onCameraClick = {
+                showImagePicker = false
+                // verficar si se ha concedio permiso
+                if (permissionsState.permissions.any {
+                        it.permission == Manifest.permission.CAMERA && it.status == PermissionStatus.Granted
+                    }) {
+                    // si se ha concedido, crea el archivo y abre la cámara
+                    tempCameraUri = createImageUri(context)
+                    tempCameraUri?.let { takePictureLauncher.launch(it) }
+                } else {
+                    // sino, pide los permisos denuevo
+                    permissionsState.launchMultiplePermissionRequest()
+                }
+            },
+            onGalleryClick = {
+                showImagePicker = false
+                val imagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    Manifest.permission.READ_MEDIA_IMAGES
+                } else {
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                }
+
+                if (permissionsState.permissions.any {
+                        it.permission == imagePermission && it.status == PermissionStatus.Granted
+                    }) {
+                    // lanzar selector de galería
+                    pickImageLauncher.launch("image/*")
+                } else {
+                    // solicitar permiso
+                    permissionsState.launchMultiplePermissionRequest()
+                }
+            }
+        )
+    }
+
+    // UI
 
     Scaffold(
         topBar = {
@@ -136,7 +168,7 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("¡Bienvenido al Perfil!", style = MaterialTheme.typography.headlineLarge)
+            Text("Avatar", style = MaterialTheme.typography.headlineLarge)
             Spacer(modifier = Modifier.height(32.dp))
 
             // --- Avatar ---
@@ -151,48 +183,52 @@ fun ProfileScreen(
                             it.status == PermissionStatus.Granted
                         }
                         if (allPermissionsGranted) {
-                            showDialog = true
+                            showImagePicker = true
                         } else {
                             permissionsState.launchMultiplePermissionRequest()
                         }
                     },
                 contentAlignment = Alignment.Center
             ) {
-                if (uiState.imageUri != null) {
+                if (uiState.avatarUri != null) {
                     AsyncImage(
-                        model = uiState.imageUri,
-                        contentDescription = "Foto de perfil",
+                        model = uiState.avatarUri,
+                        contentDescription = "Avatar del usuario",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Person,
-                        contentDescription = "Avatar por defecto",
+                        contentDescription = "Seleccionar avatar",
                         modifier = Modifier.size(80.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Toca el círculo para cambiar tu foto", style = MaterialTheme.typography.bodySmall)
 
-            if (showDialog) {
-                // Usamos el ImagePickerDialog que ya existe en ui.components
-                ImagePickerDialog(
-                    onDismiss = { showDialog = false },
-                    onCameraClick = {
-                        showDialog = false
-                        tempUri = createImageFile(context)
-                        // Aseguramos que tempUri no sea nulo antes de lanzar la cámara
-                        tempUri?.let { cameraLauncher.launch(it) }
-                    },
-                    onGalleryClick = {
-                        showDialog = false
-                        imagePickerLauncher.launch("image/*")
-                    }
-                )
-            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Presiona para cambiar foto", style = MaterialTheme.typography.bodySmall)
         }
+    }
+}
+
+/**
+ * Crea un URI temporal para guardar la foto capturada por la cámara
+ */
+fun createImageUri(context: Context): Uri? {
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val imageFileName = "profile_avatar_$timeStamp.jpg"
+    val storageDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
+
+    return try {
+        val imageFile = File(storageDir, imageFileName)
+        FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            imageFile
+        )
+    } catch (e: Exception) {
+        null
     }
 }

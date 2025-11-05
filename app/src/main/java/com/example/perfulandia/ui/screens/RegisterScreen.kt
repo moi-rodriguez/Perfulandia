@@ -146,7 +146,7 @@ fun RegisterScreen(navController: NavController) {
                 val formIsValid = name.isNotBlank() && address.isNotBlank() && email.isNotBlank() && password.isNotBlank() && termsAccepted
 
                 if (formIsValid) {
-                    // Aquí iría tu lógica de registro (ej. llamar a un ViewModel)
+                    // Aquí iría lógica de registro (ej. llamar a un ViewModel)
                     // viewModel.register(name, address, email, password)
 
                     // Entrar a HOME

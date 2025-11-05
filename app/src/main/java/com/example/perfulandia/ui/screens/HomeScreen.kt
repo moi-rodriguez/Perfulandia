@@ -16,19 +16,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.perfulandia.ui.navigation.Screen
-import com.example.perfulandia.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    navController: NavController,
-    viewModel: MainViewModel = viewModel()
-) {
+fun HomeScreen(navController: NavController) {
     val items = listOf(Screen.Home, Screen.Profile)
     var selectedItem by remember { mutableIntStateOf(0) }
 

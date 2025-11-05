@@ -1,56 +1,68 @@
-// File: app/src/main/java/com/example/perfulandia/viewmodel/ProfileViewModel.kt
 package com.example.perfulandia.viewmodel
 
 import android.app.Application
 import android.net.Uri
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.perfulandia.data.AvatarRepository
-import kotlinx.coroutines.flow.SharingStarted
+import com.example.perfulandia.AppDependencies
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// El UiState ahora solo contiene la URI, que viene del repositorio.
-data class ProfileUiState(
-    val imageUri: Uri? = null
+data class User(
+    val id: String,
+    val name: String,
+    val email: String,
+    val createdAt: Long
 )
 
-class ProfileViewModel(
-    private val avatarRepository: AvatarRepository
-) : ViewModel() {
+data class ProfileUiState(
+    val isLoading: Boolean = true,
+    val user: User? = null,
+    val error: String? = null,
+    val formattedCreatedAt: String = "",
+    val avatarUri: Uri? = null
+    // val imageUri: Uri? = null
+)
 
-    // El estado de la UI se deriva directamente del flujo del repositorio.
-    val uiState: StateFlow<ProfileUiState> = avatarRepository.avatarUri
-        .map { uri -> ProfileUiState(imageUri = uri) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = ProfileUiState() // Estado inicial mientras se carga desde DataStore
-        )
+class ProfileViewModel(application: Application) : AndroidViewModel(application) {
 
-    /**
-     * Llama al repositorio para guardar la nueva URI de la imagen.
-     */
-    fun onImageChange(uri: Uri?) {
+    private val dependencies = AppDependencies.getInstance(application)
+
+    // Obtener AvatarRepository del contenedor
+    private val avatarRepository = dependencies.avatarRepository
+
+    // _uiState es mutable y privado, solo el ViewModel puede modificarlo
+    private val _uiState = MutableStateFlow(ProfileUiState())
+
+    // uiState es público e inmutable, para ser observado desde la UI
+    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+
+    init {
+        // loadUserProfile()
+        loadSavedAvatar()
+    }
+
+    // cargar avatar desde DataStore
+    private fun loadSavedAvatar() {
         viewModelScope.launch {
-            avatarRepository.saveAvatarUri(uri)
+            avatarRepository.getAvatarUri().collect { savedUri: Uri? ->
+                _uiState.update { it.copy(avatarUri = savedUri) }
+            }
         }
     }
-}
 
-/**
- * Factory para poder inyectar el AvatarRepository en el ProfileViewModel.
- * Esto es necesario porque el ViewModel ahora tiene un constructor con parámetros.
- */
-class ProfileViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return ProfileViewModel(AvatarRepository(application)) as T
+
+    /**
+     * Actualiza la URI del avatar del usuario en el estado de la UI.
+     * @param uri La nueva URI de la imagen seleccionada.
+     */
+    fun updateAvatar(uri: Uri?) {
+        viewModelScope.launch {
+            avatarRepository.saveAvatarUri(uri)
+            // El estado se actualiza automáticamente vía Flow en loadSavedAvatar()
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

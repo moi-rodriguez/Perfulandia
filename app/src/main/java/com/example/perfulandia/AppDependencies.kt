@@ -1,19 +1,33 @@
-/*
-    registrar AvatarRepository en Dependencies
-
-    El proyecto usa un contenedor de dependencias centralizado.
-
-    Explicación:
-        Service Locator Pattern: El contenedor crea y gestiona una única instancia
-        Singleton compartido: Todos los ViewModels usan la misma instancia
-        Fácil de testear: Puedes reemplazar con mocks en tests
-
- */
-
+// En el archivo AppDependencies.kt
 package com.example.perfulandia
 
-import android.app.Application
-import com.example.perfulandia.data.AvatarRepository
+import android.content.Context
+import com.example.perfulandia.repository.AvatarRepository
+
+// Esta clase actúa como un contenedor de dependencias.
+class AppDependencies(context: Context) {
+
+    val avatarRepository: AvatarRepository by lazy {
+        AvatarRepository(context) // O como sea que lo inicialices
+    }
+
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDependencies? = null
+
+        fun getInstance(context: Context): AppDependencies {
+            return INSTANCE ?: synchronized(this) {
+                val instance = AppDependencies(context.applicationContext)
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
+}
+
+/*import android.app.Application
+import com.example.perfulandia.repository.AvatarRepository
+
 /**
  * Clase contenedora para todas las dependencias de la aplicación.
  * A medida que la app crezca, puedes añadir más repositorios aquí.
@@ -76,3 +90,4 @@ object Dependencies {
         )
     }
 }
+*/
