@@ -13,15 +13,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.perfulandia.ui.navigation.Screen
+import com.example.perfulandia.viewmodel.LoginViewModel
 
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(
+    navController: NavController,
+    viewModel: LoginViewModel = viewModel()
+) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var emailError by rememberSaveable { mutableStateOf<String?>(null) }
     var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
+
+    // Estado del ViewModel (isLoading, isLoggedIn, error)
+    val uiState by viewModel.uiState.collectAsState()
 
     fun validateFields() {
         emailError = if (email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -34,6 +42,17 @@ fun LoginScreen(navController: NavController) {
             "La contraseña debe tener al menos 6 caracteres"
         } else {
             null
+        }
+    }
+
+    // Navegar cuando el login sea exitoso
+    LaunchedEffect(uiState.isLoggedIn) {
+        if (uiState.isLoggedIn) {
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
+            }
+            // Opcional: limpiar estado después de navegar
+            viewModel.resetState()
         }
     }
 
@@ -103,23 +122,41 @@ fun LoginScreen(navController: NavController) {
             onClick = {
                 validateFields()
                 if (emailError == null && passwordError == null) {
-                    // Lógica de inicio de sesión
-                    // Por ahora, navegamos a la pantalla principal
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
+                    // llama al ViewModel en vez de navegar directo
+                    viewModel.login(email, password)
                 }
             },
+            enabled = !uiState.isLoading, // desactivar mientras carga
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Iniciar Sesión")
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(20.dp),
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Iniciando...")
+            } else {
+                Text("Iniciar Sesión")
+            }
+        }
+
+        // Error de la API (credenciales incorrectas, sin Internet, etc.)
+        if (uiState.error != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = uiState.error ?: "",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(
             onClick = {
-                // Navegar a la pantalla de registro
                 navController.navigate(Screen.Register.route) {
                     popUpTo(Screen.Login.route) { inclusive = true }
                 }
