@@ -14,31 +14,47 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.perfulandia.ui.navigation.Screen
+import com.example.perfulandia.viewmodel.SignupViewModel
 
 @Composable
-fun RegisterScreen(navController: NavController) {
-    // Estados para cada campo del formulario
+fun SignupScreen(
+    navController: NavController,
+    viewModel: SignupViewModel = viewModel()
+) {
+    // Campos que usa la API
     var name by rememberSaveable { mutableStateOf("") }
-    var address by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
-    var termsAccepted by rememberSaveable { mutableStateOf(false) }
 
-    // Estados para controlar si un campo ha sido "tocado" para mostrar errores
+    // Touched / validaciones
     var nameTouched by rememberSaveable { mutableStateOf(false) }
-    var addressTouched by rememberSaveable { mutableStateOf(false) }
     var emailTouched by rememberSaveable { mutableStateOf(false) }
     var passwordTouched by rememberSaveable { mutableStateOf(false) }
-    var termsTouched by rememberSaveable { mutableStateOf(false) }
 
-    // Estados de error para cada campo
     val nameError = nameTouched && name.isBlank()
-    val addressError = addressTouched && address.isBlank()
-    val emailError = emailTouched && email.isBlank()
-    val passwordError = passwordTouched && password.isBlank()
-    val termsError = termsTouched && !termsAccepted
+    val emailError = emailTouched && (email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches())
+    val passwordError = passwordTouched && !(
+        password.length >= 8 &&
+        password.any { it.isLetter() } &&
+        password.any { it.isDigit() }
+        )
+
+
+    // Estado del ViewModel
+    val uiState by viewModel.uiState.collectAsState()
+
+    // Navegar cuando el registro sea exitoso
+    LaunchedEffect(uiState.isSignedUp) {
+        if (uiState.isSignedUp) {
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
+            }
+            viewModel.resetState()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -55,10 +71,13 @@ fun RegisterScreen(navController: NavController) {
         )
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Campo de Nombre
+        // Nombre
         OutlinedTextField(
             value = name,
-            onValueChange = { name = it; nameTouched = true },
+            onValueChange = {
+                name = it
+                nameTouched = true
+            },
             label = { Text("Nombre completo") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -70,25 +89,13 @@ fun RegisterScreen(navController: NavController) {
         }
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Campo de Dirección
-        OutlinedTextField(
-            value = address,
-            onValueChange = { address = it; addressTouched = true },
-            label = { Text("Dirección") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            isError = addressError,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-        )
-        if (addressError) {
-            ErrorText("La dirección no puede estar vacía.")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Campo de Correo Electrónico
+        // Correo electrónico
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it; emailTouched = true },
+            onValueChange = {
+                email = it
+                emailTouched = true
+            },
             label = { Text("Correo electrónico") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -96,14 +103,17 @@ fun RegisterScreen(navController: NavController) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
         if (emailError) {
-            ErrorText("El correo no puede estar vacío.")
+            ErrorText("Ingresa un correo electrónico válido.")
         }
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Campo de Contraseña
+        // Contraseña
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it; passwordTouched = true },
+            onValueChange = {
+                password = it
+                passwordTouched = true
+            },
             label = { Text("Contraseña") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -112,59 +122,56 @@ fun RegisterScreen(navController: NavController) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
         if (passwordError) {
-            ErrorText("La contraseña no puede estar vacía.")
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Checkbox de Términos y Condiciones
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Checkbox(
-                checked = termsAccepted,
-                onCheckedChange = { termsAccepted = it; termsTouched = true }
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Acepto los Términos y Condiciones")
-        }
-        if (termsError) {
-            ErrorText("Debes aceptar los términos y condiciones.")
+            ErrorText("La contraseña debe tener al menos 8 caracteres, una letra y un número.")
         }
         Spacer(modifier = Modifier.height(24.dp))
 
         // Botón de Registro
         Button(
             onClick = {
-                // Marcar todos los campos como "tocados" para mostrar errores
                 nameTouched = true
-                addressTouched = true
                 emailTouched = true
                 passwordTouched = true
-                termsTouched = true
 
-                val formIsValid = name.isNotBlank() && address.isNotBlank() && email.isNotBlank() && password.isNotBlank() && termsAccepted
+                val formIsValid =
+                    !nameError && !emailError && !passwordError
 
                 if (formIsValid) {
-                    // Aquí iría lógica de registro (ej. llamar a un ViewModel)
-                    // viewModel.register(name, address, email, password)
-
-                    // Entrar a HOME
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
+                    viewModel.signup(name, email, password)
                 }
             },
+            enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Registrarse")
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Creando cuenta...")
+            } else {
+                Text("Registrarse")
+            }
+        }
+
+        // Error de API
+        if (uiState.error != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = uiState.error ?: "",
+                color = MaterialTheme.colorScheme.error,
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, top = 4.dp)
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(
             onClick = {
-                // Navegar de regreso a Login
                 navController.navigate(Screen.Login.route) {
                     popUpTo(Screen.Login.route) { inclusive = true }
                 }

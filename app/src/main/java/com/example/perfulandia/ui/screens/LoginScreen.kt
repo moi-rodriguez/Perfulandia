@@ -38,8 +38,8 @@ fun LoginScreen(
             null
         }
 
-        passwordError = if (password.length < 6) {
-            "La contraseña debe tener al menos 6 caracteres"
+        passwordError = if (password.length < 8) {
+            "La contraseña debe tener al menos 8 caracteres"
         } else {
             null
         }
@@ -157,7 +157,7 @@ fun LoginScreen(
 
         TextButton(
             onClick = {
-                navController.navigate(Screen.Register.route) {
+                navController.navigate(Screen.Signup.route) {
                     popUpTo(Screen.Login.route) { inclusive = true }
                 }
             }

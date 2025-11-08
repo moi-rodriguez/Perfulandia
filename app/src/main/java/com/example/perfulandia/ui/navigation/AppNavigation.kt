@@ -11,7 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.perfulandia.ui.screens.HomeScreen
 import com.example.perfulandia.ui.screens.LoginScreen
-import com.example.perfulandia.ui.screens.RegisterScreen
+import com.example.perfulandia.ui.screens.SignupScreen
 import com.example.perfulandia.ui.screens.ProfileScreen
 import com.example.perfulandia.viewmodel.ProfileViewModel
 
@@ -40,8 +40,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         composable(route = Screen.Profile.route) {
             ProfileScreen(navController = navController, uiState = uiState)
         }
-        composable(route = Screen.Register.route) {
-             RegisterScreen(navController = navController)
+        composable(route = Screen.Signup.route) {
+            SignupScreen(navController = navController)
          }
     }
 }
