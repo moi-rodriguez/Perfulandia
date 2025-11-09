@@ -30,7 +30,7 @@ object RetrofitClient {
 
         // 3. HttpLoggingInterceptor para ver peticiones/respuestas en Logcat
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY  // Cambia a NONE en producción
+            level = HttpLoggingInterceptor.Level.BODY  // Cambiar a NONE en producción
         }
 
         // 4. Configurar OkHttpClient con ambos interceptores

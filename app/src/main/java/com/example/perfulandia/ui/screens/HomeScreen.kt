@@ -29,7 +29,7 @@ fun HomeScreen(navController: NavController) {
 
     Scaffold(
         topBar = {
-            // Añadimos una barra superior para el título
+            // barra superior para el título
             TopAppBar(
                 title = { Text("Perfulandia") },
                 actions = {

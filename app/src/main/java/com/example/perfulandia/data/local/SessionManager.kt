@@ -41,15 +41,6 @@ class SessionManager(private val context: Context) {
     }
 
     /**
-     * Recupera el ID del usuario (o null si no existe)
-     */
-    suspend fun getUserId(): String? {
-        return context.dataStore.data
-            .map { preferences -> preferences[KEY_USER_ID] }
-            .first()
-    }
-
-    /**
      * Elimina la sesión completa (cerrar sesión)
      */
     suspend fun clearSession() {

@@ -1,10 +1,3 @@
-/*
-    Crear el diálogo de selección de imagen
-
-    ¿Por qué un componente separado?:
-        Separar el diálogo en su propio archivo lo hace reutilizable y más fácil de mantener.
- */
-
 package com.example.perfulandia.ui.components
 
 import androidx.compose.foundation.layout.*
@@ -14,8 +7,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Face // No existe CameraAlt
-import androidx.compose.material.icons.filled.AccountBox // No existe PhotoLibrary
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
@@ -25,6 +18,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+/**
+ * Crea el diálogo de selección de imagen para el avatar
+ *
+ * ¿Por qué un componente separado?:
+ * Separar el diálogo en su propio archivo lo hace reutilizable y más fácil de mantener.
+ */
 @Composable
 fun ImagePickerDialog(
     onDismiss: () -> Unit,

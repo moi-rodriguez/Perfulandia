@@ -72,5 +72,4 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
         }
     }
-
 }

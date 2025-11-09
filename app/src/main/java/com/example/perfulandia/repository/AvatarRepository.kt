@@ -55,27 +55,4 @@ class AvatarRepository(private val context: Context) {
             preferences.remove(AVATAR_URI_KEY)
         }
     }
-
-    /*
-    // Clave para almacenar la URI como un String
-    private val avatarUriKey = stringPreferencesKey("avatar_uri")
-
-    // Flujo para obtener la URI de la imagen. Se convierte de String a Uri.
-    val avatarUri: Flow<Uri?> = context.avatarDataStore.data
-        .map { preferences ->
-            preferences[avatarUriKey]?.let { Uri.parse(it) }
-        }
-
-    // Función para guardar la URI. Se convierte de Uri a String.
-    suspend fun saveAvatarUri(uri: Uri?) {
-        context.avatarDataStore.edit { preferences ->
-            if (uri != null) {
-                preferences[avatarUriKey] = uri.toString()
-            } else {
-                // Si la URI es nula, eliminamos la clave para limpiar el avatar guardado
-                preferences.remove(avatarUriKey)
-            }
-        }
-    }
-    */
 }
