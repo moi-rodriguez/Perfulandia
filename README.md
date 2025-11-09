@@ -1,64 +1,138 @@
-# Perfulandia App Mobile
+# <Perfulandia App>
 
 ## 1. Caso elegido y alcance
-- **Caso:** Perfulandia SPA
+
+- **Caso:** Perfulandia SPA / App de e-commerce especializada en perfumes
+  
 - **Alcance EP3:** Diseño/UI, validaciones, navegación, estado, persistencia, recursos nativos, animaciones
-  
+
 ## 2. Requisitos y ejecución
-  
-- **Stack:** Kotlin, Jetpack Compose, Material 3, Coil.  
-- **Instalación:** Abrir el proyecto en Android Studio y sincronizar Gradle.  
-- **Ejecución:** Ejecutar en un emulador o dispositivo físico con Android 8.0 o superior.  
-  No requiere configuración adicional.
+
+- **Stack:** 
+  - Framework: Android Studio con lenguaje Kotlin y Jetpack compose
+  - Librerías:
+      - Retrofit / Gson: Consumo de API REST
+      - Coil: carga de imágenes (avatar)
+      - Accompanist Permissions: manejo de permisos
+      - DataStore: persistencia de sesión y avatar
+      - Navigation Compose: navegación
+      - Material3: interfaz moderna y responsiva.
+
+- **Instalación:**
+    1. Clonar el repositorio
+    2. Abrir el proyecto en Android Studio (fijarse bien en la versión)
+    3. Y sincronizar dependencias de librerías en el build.gradle.kts (hacer clic en sync now)
+
+- **Ejecución:**
+    - Desde Android Studio hacer clic en "Run App"
+    - Emulador o dispositivo físico con Android 8.0 o superior (en mi caso, use mi telefono y le active la opción de "Depuración por USB")
 
 ## 3. Arquitectura y flujo
-El proyecto sigue una estructura basada en el patrón **MVVM (Model - View - ViewModel)**.
 
-- **Estructura carpetas**
+- **Estructura carpetas**:
   
-  /ui
-  
-    ┣ /screens → Contiene las pantallas principales (Login, Register, Profile, Home)
-  
-    ┣ /components → Elementos reutilizables como botones, tarjetas y diálogos
-  
-    ┣ /theme → Colores, tipografía y estilos
-  
-  /viewmodel → Maneja el estado y la lógica de cada pantalla
-  
-  /model → Clases de datos del usuario y entidades
-  
-  /repository → Fuente de datos y persistencia local
-  
-  /navigation → Controla el flujo de pantallas dentro de la app
-  
+  ├── Manifest/ (AndroidManifest)
+  ├── data/
+  │   ├── local/ (SessionManager)
+  │   ├── remote/ (ApiService, DTOs)
+  │   └── repository/ (UserRepository, AvatarRepository)
+  ├── ui/
+  │   ├── screens/ (Login, Signup, Home, Profile)
+  │   ├── components/ (ImagePickerDialog)
+  │   └── navigation/ (AppNavigation, Screen)
+  ├── viewmodel/ (LoginViewModel, SignupViewModel, ProfileViewModel)
+  AppDependencies
+  MainActivity
+
 - **Gestión de estado**:
-Cada pantalla tiene su propio ViewModel que expone un estado inmutable (UiState).  
-Se usan funciones collectAsState() para reaccionar a los cambios y mostrar contenido dinámico (como carga, error o éxito).
+    - Estrategia local
+    - Los estados reflejan carga/exito/error en la UI
 
-- **Navegación**: 
-Se utiliza NavHostController con rutas definidas para moverse entre Login, Registro, Home y Perfil.
+- **Navegación**:
+    - Estructura stack con cuatro rutas principales: Login, Signup, Home y Profile
+    - Verifica sesión activa al iniciar y redirige a Home si el usurio ya tiene token guardado
 
 ## 4. Funcionalidades
 
-- **Formulario validado:** el registro y login validan que los campos no estén vacíos y muestran errores visuales.
-- **Navegación fluida:** entre pantallas de login, registro, perfil y home.
-- **Gestión de estado:** cada ViewModel maneja los estados de carga y éxito.
-- **Persistencia local:** guarda temporalmente la sesión y datos del usuario.
-- **Almacenamiento de imagen de perfil:** permite seleccionar una imagen desde la galería o tomar una foto con la cámara.
-- **Recursos nativos:** usa los permisos de cámara y almacenamiento con `ActivityResultLauncher`.
-- **Animaciones:** transiciones suaves y efectos en botones o cambios de imagen.
+- **Formulario validado (registro/otra entidad)**
+    - Login con validación de formato de email y contraseña
+    - Registro con validación de nombre, correo y contraseña segura (mínimo 8 caracteres, una letra y un número)
+
+- **Navegación y backstack**
+    - 1. Login - 2. Home - 3. Profile
+    - Home y Profile accesibles mediante NavBar inferior
+  
+- **Gestión de estado (carga/éxito/error)**
+    - Uso de StateFlow para mostrar animaciones de carga, errores y estados de éxito.
+
+- **Persistencia local** (CRUD) y **almacenamiento de imagen de perfil**
+    - DataStore guarda token de sesión y URI (dirección de archivo) de avatar, persisten al cerrar la aplicación.
+    - Al cerrar sesión, se borra la info guardada
+  
+- **Recursos nativos**: cámara/galería (permisos y fallback)
+    - Accesos a recursos con permisos dinámicos gracias al modificar AndroidManifest
+    - Selección o captura de imagen como avatar de usuario
+
+- **Animaciones** con propósito
+    - Animación de carga inicial (loader con delay)
+    - Transiciones suaves entre pantallas
+  
+- **Consumo de API** (incluye `/me`)
+    - Endpoints /auth/signup, /auth/login, /auth/me
+    - Autenticación JWT automática con AuthInterceptor
 
 ## 5. Endpoints
 
-No supe como conectarme a la api
+  **Base URL:** `https://x8ki-letl-twmt.n7.xano.io/api:Rfm_61dW`
+
+  1. POST /auth/login (login en retrieve an auth token) 
+Parameters example: 
+{
+  "email": "user@example.com",
+  "password": "string"
+}
+Responses: 
+{
+  "authToken": "string",
+  "user_id": "string"
+}
+
+2. GET /auth/me (Get the user record belonging to the authentication token)
+Parameters example: 
+{
+  "id": 0,
+  "created_at": "now",
+  "name": "string",
+  "email": "user@example.com",
+  "account_id": 0,
+  "role": "admin"
+}
+
+3. POST /auth/signup (Signup and retrieve an authentication token) 
+Parameters example: 
+{
+  "name": "string",
+  "email": "user@example.com",
+  "password": "string"
+}
+Responses:
+{
+  "authToken": "string",
+  "user_id": "string"
+}
 
 ## 6. User flows
-
-El flujo principal de la aplicación es el siguiente:
-
-1. El usuario abre la app y llega a la pantalla de **Login**.  
-2. Si no tiene cuenta, puede ir a **Registro**, llenar el formulario y volver al Login.  
-3. Una vez dentro, accede a la **Home**, desde donde puede ir a su **Perfil**.  
-4. En el **Perfil**, puede cambiar su foto seleccionando una imagen o usando la cámara.  
-5. El usuario puede cerrar sesión desde el perfil y volver al inicio.
+- Descripción del flujo principal:
+    1. Usuario abre la app -> pantalla de carga 3s
+    2. Si hay token -> Home; si no -> Login
+    3. Desde Login puede registrarse o iniciar sesión
+    4. Tras login o signup exitoso -> Home
+    5. Desde Home puede ir a Perfil
+    6. En Perfil:
+         - cambiar avatar (cámara o galería)
+         - ver su nombre y correo
+         - y cerrar sesión (borra token y avatar)
+- Casos de error:
+    - Campos vacíos o inválidos -> mensajes de error locales
+    - Credenciales incorrectas -> mensajes según código HTTP
+    - Token expirado -> redirección a Login
