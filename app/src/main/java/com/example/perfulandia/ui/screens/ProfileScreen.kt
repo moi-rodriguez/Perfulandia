@@ -29,7 +29,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.perfulandia.ui.components.ImagePickerDialog
 import com.example.perfulandia.ui.navigation.Screen
-import com.example.perfulandia.viewmodel.ProfileUiState
 import com.example.perfulandia.viewmodel.ProfileViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
@@ -39,23 +38,20 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.listOf
 
-
 // --- Composable Principal ---
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    uiState: ProfileUiState
-    //onRefresh: () -> Unit
+    viewModel: ProfileViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val viewModel: ProfileViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState()
+
     var showImagePicker by remember { mutableStateOf(false) } // showdialog
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) } // tempuri
     val items = listOf(Screen.Home, Screen.Profile)
     var selectedItem by remember { mutableIntStateOf(1) }
-    //val uiState by profileViewModel.uiState.collectAsState()
-
 
     // --- Permisos ---
     val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -168,8 +164,6 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Avatar", style = MaterialTheme.typography.headlineLarge)
-            Spacer(modifier = Modifier.height(32.dp))
 
             // --- Avatar ---
             Box(
@@ -207,8 +201,46 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Presiona para cambiar foto", style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Loading simple
+            if (uiState.isLoading) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Error
+            if (uiState.error != null) {
+                Text(
+                    text = uiState.error ?: "",
+                    color = MaterialTheme.colorScheme.error
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Nombre y correo del usuario (desde /auth/me)
+            uiState.user?.let { user ->
+                Text(text = user.name, style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = user.email, style = MaterialTheme.typography.bodyMedium)
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            // Botón Cerrar sesión
+            Button(
+                onClick = {
+                    viewModel.logout()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+            ) {
+                Text("Cerrar sesión")
+            }
         }
     }
 }
