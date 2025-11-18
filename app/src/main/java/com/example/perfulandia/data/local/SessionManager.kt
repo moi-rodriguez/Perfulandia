@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 /**
- * SessionManager: Guarda y recupera el token de autenticación de forma segura
+ * SessionManager: Guarda, recupera o elimina el token de autenticación de forma segura
  */
 class SessionManager(private val context: Context) {
 
