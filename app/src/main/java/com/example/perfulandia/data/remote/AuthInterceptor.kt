@@ -1,4 +1,4 @@
-package com.example.perfulandia.data.remote.interceptor
+package com.example.perfulandia.data.remote
 
 import com.example.perfulandia.data.local.SessionManager
 import kotlinx.coroutines.runBlocking
