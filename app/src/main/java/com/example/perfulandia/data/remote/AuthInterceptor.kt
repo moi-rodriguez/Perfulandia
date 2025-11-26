@@ -1,44 +1,86 @@
-package com.example.perfulandia.data.remote
+package com.example.perfulandia.data.remote.interceptor
 
 import com.example.perfulandia.data.local.SessionManager
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
+import java.net.HttpURLConnection
 
 /**
- * Añade automáticamente el token de autenticación a las peticiones
+ * AuthInterceptor: Añade automáticamente el token JWT a las peticiones
+ * y maneja respuestas de autenticación
  *
- * ¿Cuándo se ejecuta?
- * - ANTES de cada petición HTTP
- *
- * ¿Qué hace?
- * 1. Recupera el token del SessionManager
- * 2. Si existe, añade el header: Authorization: Bearer {token}
- * 3. Si no existe, deja la petición sin modificar
+ * Funcionalidades:
+ * - Añade header "Authorization: Bearer {token}" a peticiones autenticadas
+ * - Excluye endpoints públicos que no necesitan autenticación
+ * - Maneja respuestas 401 (Unauthorized) limpiando la sesión
+ * - Añade headers adicionales requeridos por la API
  */
 class AuthInterceptor(
     private val sessionManager: SessionManager
 ) : Interceptor {
 
+    companion object {
+        // Endpoints que NO requieren autenticación
+        private val PUBLIC_ENDPOINTS = setOf(
+            "/auth/login",
+            "/auth/register"
+        )
+    }
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
+        val path = originalRequest.url.encodedPath
 
-        // Recuperar el token (runBlocking porque intercept no es suspend)
+        // Si es un endpoint público, no añadir token
+        if (isPublicEndpoint(path)) {
+            return chain.proceed(originalRequest)
+        }
+
+        // Recuperar el token del SessionManager
         val token = runBlocking {
             sessionManager.getAuthToken()
         }
 
-        // Si no hay token, continuar con la petición original
-        if (token.isNullOrEmpty()) {
-            return chain.proceed(originalRequest)
+        // Construir la petición con headers
+        val requestBuilder = originalRequest.newBuilder()
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json")
+
+        // Añadir token si existe
+        if (!token.isNullOrEmpty()) {
+            requestBuilder.header("Authorization", "Bearer $token")
         }
 
-        // Crear nueva petición con el token en el header
-        val authenticatedRequest = originalRequest.newBuilder()
-            .header("Authorization", "Bearer $token")
-            .build()
+        val authenticatedRequest = requestBuilder.build()
 
-        // Continuar con la petición autenticada
-        return chain.proceed(authenticatedRequest)
+        // Ejecutar la petición
+        val response = chain.proceed(authenticatedRequest)
+
+        // Manejar respuesta 401 (Unauthorized)
+        if (response.code == HttpURLConnection.HTTP_UNAUTHORIZED) {
+            handleUnauthorized()
+        }
+
+        return response
+    }
+
+    /**
+     * Verifica si el endpoint es público (no requiere autenticación)
+     */
+    private fun isPublicEndpoint(path: String): Boolean {
+        return PUBLIC_ENDPOINTS.any { publicPath ->
+            path.contains(publicPath, ignoreCase = true)
+        }
+    }
+
+    /**
+     * Maneja respuestas 401 Unauthorized
+     * Limpia la sesión para que el usuario tenga que volver a autenticarse
+     */
+    private fun handleUnauthorized() {
+        runBlocking {
+            sessionManager.clearSession()
+        }
     }
 }
