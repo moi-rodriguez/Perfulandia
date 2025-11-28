@@ -24,8 +24,11 @@ data class ResenaDto(
     @SerializedName("descripcion")
     val descripcion: String? = null,
 
-    @SerializedName("imagenThumbnail")
+    @SerializedName("imagen")
     val imagen: String? = null,
+
+    @SerializedName("imagenThumbnail")
+    val imagenThumbnail: String? = null,
 
     @SerializedName("createdAt")
     val createdAt: String? = null,
