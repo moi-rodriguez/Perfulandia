@@ -2,6 +2,7 @@ package com.example.perfulandia.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
+
 /**
  * AuthResponse: Respuesta de autenticación (login o register)
  *

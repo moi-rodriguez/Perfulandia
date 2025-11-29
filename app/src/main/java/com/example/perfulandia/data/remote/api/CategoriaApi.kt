@@ -23,6 +23,29 @@ import retrofit2.http.Path
  */
 
 interface CategoriaApi{
+    /**
+     * Obtener Categoria por ID
+     * RUTA: GET /api/categoria/{id}
+     */
+    @GET("categoria/{id}")
+    suspend fun getCategoriaById(
+        @Path("id") id: String
+    ): Response<CategoriaResponse>
+
+    /**
+     * DELETE /categoria/{id}
+     * Eliminar un categoria
+     *
+     * @param id ID del categoria
+     * @return Confirmación de eliminación
+     */
+
+    @DELETE("categoria/{id}")
+    suspend fun deleteCategoria(
+        @Path("id") id: String
+    ): Response<CategoriaResponse>
+
+
 
     /**
      * GET /categoria
@@ -68,7 +91,7 @@ interface CategoriaApi{
      */
 
     @Multipart
-    @POST("categgoria/{id}/upload-image")
+    @POST("categoria/{id}/upload-image")
     suspend fun uploadImage(
         @Path("id") id: String,
         @Part image: MultipartBody.Part
