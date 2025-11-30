@@ -1,11 +1,13 @@
 package com.example.perfulandia.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.perfulandia.repository.UserRepository
+// Importamos el Repositorio y las clases de dominio/datos
+import com.example.perfulandia.data.repository.AuthRepository
+import com.example.perfulandia.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.net.SocketTimeoutException
@@ -13,42 +15,52 @@ import java.net.UnknownHostException
 
 /**
  * Estado de la UI de Login
+ * @param user El objeto User (modelo de dominio) en caso de éxito del login. Null si falla o está en carga.
  */
 data class LoginUiState(
     val isLoading: Boolean = false,
-    val isLoggedIn: Boolean = false,
+    val user: User? = null,
     val error: String? = null
 )
 
 /**
- * ViewModel: Maneja la lógica de login y el estado de la pantalla
+ * ViewModel: Maneja la lógica de login y el estado de la pantalla.
+ * Ahora inyecta AuthRepository, desacoplando la lógica de la capa de datos.
  */
-class LoginViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository = UserRepository(application)
+class LoginViewModel(
+    // 1. INYECCIÓN DE DEPENDENCIA: Usamos el Repositorio de la capa de dominio/datos
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
-    val uiState: StateFlow<LoginUiState> = _uiState
+    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     fun login(email: String, password: String) {
+
+        // 2. Preparamos el estado de carga
         _uiState.value = _uiState.value.copy(
             isLoading = true,
             error = null,
-            isLoggedIn = false
+            user = null
         )
 
         viewModelScope.launch {
-            val result = repository.login(email, password)
 
-            _uiState.value = result.fold(
-                onSuccess = {
-                    _uiState.value.copy(
+            // 3. Llamamos al Repositorio, que devuelve Result<User>.
+            // NOTA: Se llama directamente con email y password, tal como está definido en AuthRepository.
+            val result = authRepository.login(email, password)
+
+            // 4. Manejamos el resultado y actualizamos el StateFlow
+            val newState = result.fold(
+                onSuccess = { userObject ->
+                    LoginUiState(
                         isLoading = false,
-                        isLoggedIn = true,
+                        user = userObject, // Éxito: Guardamos el modelo de dominio User
                         error = null
                     )
                 },
                 onFailure = { exception ->
+                    // Lógica robusta de manejo de errores, manteniendo tu estructura original
                     val friendlyMessage = when (exception) {
                         is HttpException -> {
                             when (exception.code()) {
@@ -68,16 +80,20 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                             exception.localizedMessage ?: "Ocurrió un error desconocido."
                     }
 
-                    _uiState.value.copy(
+                    LoginUiState(
                         isLoading = false,
-                        isLoggedIn = false,
+                        user = null,
                         error = friendlyMessage
                     )
                 }
             )
+            _uiState.value = newState
         }
     }
 
+    /**
+     * Función para limpiar el estado después de un éxito o error manejado en la UI.
+     */
     fun resetState() {
         _uiState.value = LoginUiState()
     }
