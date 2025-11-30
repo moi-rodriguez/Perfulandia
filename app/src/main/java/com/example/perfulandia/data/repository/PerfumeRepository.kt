@@ -1,159 +1,160 @@
 package com.example.perfulandia.data.repository
 
+import com.example.perfulandia.data.mapper.PerfumeMapper
 import com.example.perfulandia.data.remote.api.PerfumeApi
 import com.example.perfulandia.data.remote.dto.CreatePerfumeRequest
-import com.example.perfulandia.data.remote.dto.PerfumeDto
 import com.example.perfulandia.data.remote.dto.UpdatePerfumeRequest
+import com.example.perfulandia.model.Perfume
 import okhttp3.MultipartBody
 
 /**
- * PerfumeRepository: Maneja operaciones CRUD de perfumes
+ * PerfumeRepository: Gestiona los datos de los perfumes.
+ *
+ * Actúa como intermediario entre la API (datos crudos) y el ViewModel (datos de dominio).
+ * Se encarga de manejar las respuestas HTTP y convertir los DTOs a modelos limpios.
  */
 class PerfumeRepository(
-    private val perfumeApi: PerfumeApi
+    private val api: PerfumeApi
 ) {
 
     /**
-     * Obtener todos los perfumes
+     * Obtiene la lista de todos los perfumes.
+     * Convierte List<PerfumeDto> -> List<Perfume>
      */
-    suspend fun getAllPerfumes(): Result<List<PerfumeDto>> {
+    suspend fun getAllPerfumes(): Result<List<Perfume>> {
         return try {
-            val response = perfumeApi.getAllPerfumes()
+            val response = api.getAllPerfumes()
 
-            if (response.isSuccessful && response.body() != null) {
-                val perfumesResponse = response.body()!!
-
-                if (perfumesResponse.success) {
-                    Result.success(perfumesResponse.data)
+            if (response.isSuccessful) {
+                val body = response.body()
+                // Verificamos que el cuerpo no sea nulo y que el flag 'success' sea true
+                if (body != null && body.success) {
+                    // AQUÍ ESTÁ LA MAGIA: Usamos el Mapper para convertir los datos
+                    val perfumesDomain = PerfumeMapper.fromDtoList(body.data)
+                    Result.success(perfumesDomain)
                 } else {
-                    Result.failure(Exception(perfumesResponse.message ?: "Error al obtener perfumes"))
+                    Result.failure(Exception(body?.message ?: "Error al obtener la lista de perfumes"))
                 }
             } else {
-                Result.failure(Exception("Error: ${response.code()}"))
+                Result.failure(Exception("Error del servidor: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión: ${e.message}"))
+            Result.failure(e)
         }
     }
 
     /**
-     * Obtener un perfume por ID
+     * Obtiene un perfume específico por su ID.
+     * Convierte PerfumeDto -> Perfume
      */
-    suspend fun getPerfumeById(id: String): Result<PerfumeDto> {
+    suspend fun getPerfumeById(id: String): Result<Perfume> {
         return try {
-            val response = perfumeApi.getPerfumeById(id)
+            val response = api.getPerfumeById(id)
 
-            if (response.isSuccessful && response.body() != null) {
-                val perfumeResponse = response.body()!!
-
-                if (perfumeResponse.success) {
-                    Result.success(perfumeResponse.data)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success) {
+                    // Convertimos el DTO individual a Modelo de Dominio
+                    val perfumeDomain = PerfumeMapper.fromDto(body.data)
+                    Result.success(perfumeDomain)
                 } else {
-                    Result.failure(Exception(perfumeResponse.message ?: "Perfume no encontrado"))
+                    Result.failure(Exception(body?.message ?: "Perfume no encontrado"))
                 }
             } else {
-                Result.failure(Exception("Error: ${response.code()}"))
+                Result.failure(Exception("Error del servidor: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión: ${e.message}"))
+            Result.failure(e)
         }
     }
 
     /**
-     * Crear un nuevo perfume
+     * Crea un nuevo perfume.
      */
-    suspend fun createPerfume(nombre: String, descripcion: String? = null): Result<PerfumeDto> {
+    suspend fun createPerfume(nombre: String, descripcion: String?): Result<Perfume> {
         return try {
             val request = CreatePerfumeRequest(nombre, descripcion)
-            val response = perfumeApi.createPerfume(request)
+            val response = api.createPerfume(request)
 
-            if (response.isSuccessful && response.body() != null) {
-                val perfumeResponse = response.body()!!
-
-                if (perfumeResponse.success) {
-                    Result.success(perfumeResponse.data)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success) {
+                    Result.success(PerfumeMapper.fromDto(body.data))
                 } else {
-                    Result.failure(Exception(perfumeResponse.message ?: "Error al crear perfume"))
+                    Result.failure(Exception(body?.message ?: "Error al crear el perfume"))
                 }
             } else {
-                Result.failure(Exception("Error: ${response.code()}"))
+                Result.failure(Exception("Error del servidor: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión: ${e.message}"))
+            Result.failure(e)
         }
     }
 
     /**
-     * Actualizar un perfume
+     * Actualiza un perfume existente.
      */
-    suspend fun updatePerfume(
-        id: String,
-        nombre: String? = null,
-        descripcion: String? = null
-    ): Result<PerfumeDto> {
+    suspend fun updatePerfume(id: String, nombre: String?, descripcion: String?): Result<Perfume> {
         return try {
             val request = UpdatePerfumeRequest(nombre, descripcion)
-            val response = perfumeApi.updatePerfume(id, request)
+            val response = api.updatePerfume(id, request)
 
-            if (response.isSuccessful && response.body() != null) {
-                val perfumeResponse = response.body()!!
-
-                if (perfumeResponse.success) {
-                    Result.success(perfumeResponse.data)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success) {
+                    Result.success(PerfumeMapper.fromDto(body.data))
                 } else {
-                    Result.failure(Exception(perfumeResponse.message ?: "Error al actualizar perfume"))
+                    Result.failure(Exception(body?.message ?: "Error al actualizar el perfume"))
                 }
             } else {
-                Result.failure(Exception("Error: ${response.code()}"))
+                Result.failure(Exception("Error del servidor: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión: ${e.message}"))
+            Result.failure(e)
         }
     }
 
     /**
-     * Eliminar un perfume
+     * Elimina un perfume por ID.
      */
     suspend fun deletePerfume(id: String): Result<Boolean> {
         return try {
-            val response = perfumeApi.deletePerfume(id)
+            val response = api.deletePerfume(id)
 
-            if (response.isSuccessful && response.body() != null) {
-                val perfumeResponse = response.body()!!
-
-                if (perfumeResponse.success) {
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success) {
                     Result.success(true)
                 } else {
-                    Result.failure(Exception(perfumeResponse.message ?: "Error al eliminar perfume"))
+                    Result.failure(Exception(body?.message ?: "Error al eliminar el perfume"))
                 }
             } else {
-                Result.failure(Exception("Error: ${response.code()}"))
+                Result.failure(Exception("Error del servidor: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión: ${e.message}"))
+            Result.failure(e)
         }
     }
 
     /**
-     * Subir imagen a un perfume
+     * Sube una imagen para un perfume.
      */
-    suspend fun uploadImage(id: String, image: MultipartBody.Part): Result<PerfumeDto> {
+    suspend fun uploadImage(id: String, imagePart: MultipartBody.Part): Result<Perfume> {
         return try {
-            val response = perfumeApi.uploadImage(id, image)
+            val response = api.uploadImage(id, imagePart)
 
-            if (response.isSuccessful && response.body() != null) {
-                val perfumeResponse = response.body()!!
-
-                if (perfumeResponse.success) {
-                    Result.success(perfumeResponse.data)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success) {
+                    Result.success(PerfumeMapper.fromDto(body.data))
                 } else {
-                    Result.failure(Exception(perfumeResponse.message ?: "Error al subir imagen"))
+                    Result.failure(Exception(body?.message ?: "Error al subir la imagen"))
                 }
             } else {
-                Result.failure(Exception("Error: ${response.code()}"))
+                Result.failure(Exception("Error del servidor: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión: ${e.message}"))
+            Result.failure(e)
         }
     }
 }

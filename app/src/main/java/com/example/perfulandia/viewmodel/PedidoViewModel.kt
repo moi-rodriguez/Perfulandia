@@ -1,39 +1,37 @@
-package com.example.perfulandia.data.repository
+package com.example.perfulandia.viewmodel
 
-import com.example.perfulandia.data.mapper.CategoriaMapper
-import com.example.perfulandia.data.remote.api.CategoriaApi
-import com.example.perfulandia.data.remote.dto.CreateCategoriaRequest
-import com.example.perfulandia.data.remote.dto.UpdateCategoriaRequest
-import com.example.perfulandia.model.Categoria
+import com.example.perfulandia.data.mapper.PedidoMapper
+import com.example.perfulandia.data.remote.api.PedidoApi
+import com.example.perfulandia.data.remote.dto.CreatePedidoRequest
+import com.example.perfulandia.data.remote.dto.UpdatePedidoRequest
+import com.example.perfulandia.model.Pedido
 import okhttp3.MultipartBody
 
 /**
- * CategoriaRepository: Gestiona los datos de las categorías.
+ * PedidoRepository: Gestiona los datos de los pedidos.
  *
  * Actúa como intermediario entre la API (datos crudos) y el ViewModel (datos de dominio).
  * Se encarga de manejar las respuestas HTTP y convertir los DTOs a modelos limpios.
  */
-class CategoriaRepository(
-    private val api: CategoriaApi
+class PedidoRepository(
+    private val api: PedidoApi
 ) {
 
     /**
-     * Obtiene la lista de todas las categorías.
-     * Convierte List<CategoriaDto> -> List<Categoria>
+     * Obtiene la lista de todos los pedidos.
+     * Convierte List<PedidoDto> -> List<Pedido>
      */
-    suspend fun getAllCategorias(): Result<List<Categoria>> {
+    suspend fun getAllPedidos(): Result<List<Pedido>> {
         return try {
-            val response = api.getAllCategorias()
+            val response = api.getAllPedidos()
 
             if (response.isSuccessful) {
                 val body = response.body()
-                // Verificamos que el cuerpo no sea nulo y que el flag 'success' sea true
                 if (body != null && body.success) {
-                    // Usamos el Mapper para convertir los datos
-                    val categoriasDomain = CategoriaMapper.fromDtoList(body.data)
-                    Result.success(categoriasDomain)
+                    val pedidosDomain = PedidoMapper.fromDtoList(body.data)
+                    Result.success(pedidosDomain)
                 } else {
-                    Result.failure(Exception(body?.message ?: "Error al obtener la lista de categorías"))
+                    Result.failure(Exception(body?.message ?: "Error al obtener la lista de pedidos"))
                 }
             } else {
                 Result.failure(Exception("Error del servidor: ${response.code()}"))
@@ -44,20 +42,19 @@ class CategoriaRepository(
     }
 
     /**
-     * Obtiene una categoría específica por su ID.
-     * Convierte CategoriaDto -> Categoria
+     * Obtiene un pedido específico por su ID.
      */
-    suspend fun getCategoriaById(id: String): Result<Categoria> {
+    suspend fun getPedidoById(id: String): Result<Pedido> {
         return try {
-            val response = api.getCategoriaById(id)
+            val response = api.getPedidoById(id)
 
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.success) {
-                    val categoriaDomain = CategoriaMapper.fromDto(body.data)
-                    Result.success(categoriaDomain)
+                    val pedidoDomain = PedidoMapper.fromDto(body.data)
+                    Result.success(pedidoDomain)
                 } else {
-                    Result.failure(Exception(body?.message ?: "Categoría no encontrada"))
+                    Result.failure(Exception(body?.message ?: "Pedido no encontrado"))
                 }
             } else {
                 Result.failure(Exception("Error del servidor: ${response.code()}"))
@@ -68,19 +65,19 @@ class CategoriaRepository(
     }
 
     /**
-     * Crea una nueva categoría.
+     * Crea un nuevo pedido.
      */
-    suspend fun createCategoria(nombre: String, descripcion: String?): Result<Categoria> {
+    suspend fun createPedido(nombre: String, descripcion: String?): Result<Pedido> {
         return try {
-            val request = CreateCategoriaRequest(nombre, descripcion)
-            val response = api.createCategoria(request)
+            val request = CreatePedidoRequest(nombre, descripcion)
+            val response = api.createPedido(request)
 
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.success) {
-                    Result.success(CategoriaMapper.fromDto(body.data))
+                    Result.success(PedidoMapper.fromDto(body.data))
                 } else {
-                    Result.failure(Exception(body?.message ?: "Error al crear la categoría"))
+                    Result.failure(Exception(body?.message ?: "Error al crear el pedido"))
                 }
             } else {
                 Result.failure(Exception("Error del servidor: ${response.code()}"))
@@ -91,19 +88,19 @@ class CategoriaRepository(
     }
 
     /**
-     * Actualiza una categoría existente.
+     * Actualiza un pedido existente.
      */
-    suspend fun updateCategoria(id: String, nombre: String?, descripcion: String?): Result<Categoria> {
+    suspend fun updatePedido(id: String, nombre: String?, descripcion: String?): Result<Pedido> {
         return try {
-            val request = UpdateCategoriaRequest(nombre, descripcion)
-            val response = api.updateCategoria(id, request)
+            val request = UpdatePedidoRequest(nombre, descripcion)
+            val response = api.updatePedido(id, request)
 
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.success) {
-                    Result.success(CategoriaMapper.fromDto(body.data))
+                    Result.success(PedidoMapper.fromDto(body.data))
                 } else {
-                    Result.failure(Exception(body?.message ?: "Error al actualizar la categoría"))
+                    Result.failure(Exception(body?.message ?: "Error al actualizar el pedido"))
                 }
             } else {
                 Result.failure(Exception("Error del servidor: ${response.code()}"))
@@ -114,18 +111,18 @@ class CategoriaRepository(
     }
 
     /**
-     * Elimina una categoría por ID.
+     * Elimina un pedido por ID.
      */
-    suspend fun deleteCategoria(id: String): Result<Boolean> {
+    suspend fun deletePedido(id: String): Result<Boolean> {
         return try {
-            val response = api.deleteCategoria(id)
+            val response = api.deletePedido(id)
 
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.success) {
                     Result.success(true)
                 } else {
-                    Result.failure(Exception(body?.message ?: "Error al eliminar la categoría"))
+                    Result.failure(Exception(body?.message ?: "Error al eliminar el pedido"))
                 }
             } else {
                 Result.failure(Exception("Error del servidor: ${response.code()}"))
@@ -136,16 +133,16 @@ class CategoriaRepository(
     }
 
     /**
-     * Sube una imagen para una categoría.
+     * Sube una imagen para un pedido.
      */
-    suspend fun uploadImage(id: String, imagePart: MultipartBody.Part): Result<Categoria> {
+    suspend fun uploadImage(id: String, imagePart: MultipartBody.Part): Result<Pedido> {
         return try {
             val response = api.uploadImage(id, imagePart)
 
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.success) {
-                    Result.success(CategoriaMapper.fromDto(body.data))
+                    Result.success(PedidoMapper.fromDto(body.data))
                 } else {
                     Result.failure(Exception(body?.message ?: "Error al subir la imagen"))
                 }
