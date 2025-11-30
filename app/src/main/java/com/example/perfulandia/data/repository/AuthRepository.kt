@@ -1,6 +1,8 @@
 package com.example.perfulandia.data.repository
 
 import com.example.perfulandia.data.local.SessionManager
+import com.example.perfulandia.data.mapper.UserMapper
+import com.example.perfulandia.model.User
 import com.example.perfulandia.data.remote.api.AuthApi
 import com.example.perfulandia.data.remote.dto.LoginRequest
 import com.example.perfulandia.data.remote.dto.RegisterRequest
@@ -16,14 +18,15 @@ import com.example.perfulandia.data.remote.dto.UserDto
  */
 class AuthRepository(
     private val authApi: AuthApi,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val userMapper: UserMapper = UserMapper
 ) {
 
     /**
      * Login del usuario
      * @return Result con UserDto si es exitoso, o Exception si falla
      */
-    suspend fun login(email: String, password: String): Result<UserDto> {
+    suspend fun login(email: String, password: String): Result<User> {
         return try {
             val request = LoginRequest(email, password)
             val response = authApi.login(request)
@@ -41,7 +44,7 @@ class AuthRepository(
                         userRole = body.user.role
                     )
 
-                    Result.success(body.user)
+                    Result.success(UserMapper.fromDto(body.user))
                 } else {
                     Result.failure(Exception(body?.message ?: "Login fallido"))
                 }
@@ -67,7 +70,7 @@ class AuthRepository(
         email: String,
         password: String,
         role: String = "user"
-    ): Result<UserDto> {
+    ): Result<User> {
         return try {
             val request = RegisterRequest(nombre, email, password, role)
             val response = authApi.register(request)
@@ -85,7 +88,7 @@ class AuthRepository(
                         userRole = body.user.role
                     )
 
-                    Result.success(body.user)
+                    Result.success(UserMapper.fromDto(body.user))
                 } else {
                     Result.failure(Exception(body?.message ?: "Registro fallido"))
                 }
@@ -106,7 +109,7 @@ class AuthRepository(
     /**
      * Obtener perfil del usuario actual
      */
-    suspend fun getProfile(): Result<UserDto> {
+    suspend fun getProfile(): Result<User> {
         return try {
             val response = authApi.getProfile()
 
@@ -114,7 +117,7 @@ class AuthRepository(
                 val body = response.body()
 
                 if (body != null && body.success) {
-                    Result.success(body.user)
+                    Result.success(UserMapper.fromDto(body.user))
                 } else {
                     Result.failure(Exception("Error al obtener perfil"))
                 }
@@ -129,7 +132,7 @@ class AuthRepository(
     /**
      * Obtener lista de usuarios (solo admin)
      */
-    suspend fun getAllUsers(): Result<List<UserDto>> {
+    suspend fun getAllUsers(): Result<List<User>> {
         return try {
             val response = authApi.getUsers()
 
@@ -137,7 +140,7 @@ class AuthRepository(
                 val body = response.body()
 
                 if (body != null && body.success) {
-                    Result.success(body.data)
+                    Result.success(UserMapper.fromDtoList(body.data))
                 } else {
                     Result.failure(Exception("Error al obtener usuarios"))
                 }

@@ -2,7 +2,7 @@ package com.example.perfulandia.data.remote
 
 import com.example.perfulandia.data.remote.dto.AuthResponse
 import com.example.perfulandia.data.remote.dto.LoginRequest
-import com.example.perfulandia.data.remote.dto.SignupRequest
+import com.example.perfulandia.data.remote.dto.RegisterRequest
 import com.example.perfulandia.data.remote.dto.UserDto
 import retrofit2.http.*
 
@@ -23,15 +23,15 @@ interface ApiService {
     suspend fun login(@Body request: LoginRequest): AuthResponse
 
     /**
-     * REGISTRO (SIGNUP) - Crear cuenta y obtener token
-     * POST /auth/signup
+     * REGISTRO (Register) - Crear cuenta y obtener token
+     * POST /auth/register
      *
      * Ejemplo de uso:
-     * val response = apiService.signup(SignupRequest(name, email, password))
+     * val response = apiService.Register(RegisterRequest(name, email, password))
      * sessionManager.saveSession(response.authToken, response.userId)
      */
-    @POST("auth/signup")
-    suspend fun signup(@Body request: SignupRequest): AuthResponse
+    @POST("auth/register")
+    suspend fun register(@Body request: RegisterRequest): AuthResponse
 
     /**
      * OBTENER USUARIO ACTUAL (requiere autenticación)
