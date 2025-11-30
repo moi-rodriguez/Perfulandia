@@ -5,7 +5,7 @@ sealed class Screen(val route: String) {
     // Rutas simples (sin argumentos): Usamos 'data object' es un singleton seguro de tipos
 
     data object Login : Screen("Login")
-    data object Signup : Screen("Signup")
+    data object Register : Screen("Register")
     data object Home : Screen("Home")
     data object Profile : Screen("Profile")
 }

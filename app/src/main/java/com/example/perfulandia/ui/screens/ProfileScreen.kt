@@ -1,9 +1,5 @@
 package com.example.perfulandia.ui.screens
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import android.Manifest
 import android.content.Context
 import android.net.Uri
@@ -23,10 +19,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.perfulandia.AppDependencies
 import com.example.perfulandia.ui.components.ImagePickerDialog
 import com.example.perfulandia.ui.navigation.Screen
 import com.example.perfulandia.viewmodel.ProfileViewModel
@@ -36,24 +37,39 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.listOf
 
-// --- Composable Principal ---
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ProfileScreen(
-    navController: NavController,
-    viewModel: ProfileViewModel = viewModel()
+    navController: NavController
 ) {
     val context = LocalContext.current
+
+    // 1. OBTENER DEPENDENCIAS (Crucial para que no falle el ViewModel)
+    val dependencies = remember { AppDependencies.getInstance(context) }
+
+    // 2. INYECTAR VIEWMODEL CON FACTORY
+    val viewModel: ProfileViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                ProfileViewModel(
+                    dependencies.authRepository,
+                    dependencies.avatarRepository
+                )
+            }
+        }
+    )
+
     val uiState by viewModel.uiState.collectAsState()
 
-    var showImagePicker by remember { mutableStateOf(false) } // showdialog
-    var tempCameraUri by remember { mutableStateOf<Uri?>(null) } // tempuri
-    val items = listOf(Screen.Home, Screen.Profile)
-    var selectedItem by remember { mutableIntStateOf(1) }
+    var showImagePicker by remember { mutableStateOf(false) }
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
 
-    // --- Permisos ---
+    // Configuración del Bottom Bar
+    val items = listOf(Screen.Home, Screen.Profile)
+    var selectedItem by remember { mutableIntStateOf(1) } // 1 es Profile
+
+    // --- Permisos (Igual que tu código original) ---
     val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         listOf(
             Manifest.permission.CAMERA,
@@ -70,7 +86,7 @@ fun ProfileScreen(
 
     // --- Lanzadores de Actividades ---
 
-    // launcher para capturar foto con cámara
+    // Launcher para capturar foto con cámara
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
@@ -79,7 +95,7 @@ fun ProfileScreen(
         }
     }
 
-    // launcher para seleccionar imagen de galería
+    // Launcher para seleccionar imagen de galería
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -88,48 +104,55 @@ fun ProfileScreen(
         }
     }
 
-    // cuadro de diálogo
+    // Lógica del Dialogo de Selección de Imagen
     if (showImagePicker) {
-        // se creó en ui.components
         ImagePickerDialog(
             onDismiss = { showImagePicker = false },
             onCameraClick = {
                 showImagePicker = false
-                // verficar si se ha concedio permiso
-                if (permissionsState.permissions.any {
-                        it.permission == Manifest.permission.CAMERA && it.status == PermissionStatus.Granted
-                    }) {
-                    // si se ha concedido, crea el archivo y abre la cámara
+                // Verificar si se ha concedido permiso de CAMARA
+                val cameraPermission = permissionsState.permissions.find { it.permission == Manifest.permission.CAMERA }
+
+                if (cameraPermission?.status == PermissionStatus.Granted) {
+                    // Si se ha concedido, crea el archivo y abre la cámara
                     tempCameraUri = createImageUri(context)
                     tempCameraUri?.let { takePictureLauncher.launch(it) }
                 } else {
-                    // sino, pide los permisos denuevo
+                    // Sino, pide los permisos de nuevo
                     permissionsState.launchMultiplePermissionRequest()
                 }
             },
             onGalleryClick = {
                 showImagePicker = false
-                val imagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val imagePermissionName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     Manifest.permission.READ_MEDIA_IMAGES
                 } else {
                     Manifest.permission.READ_EXTERNAL_STORAGE
                 }
 
-                if (permissionsState.permissions.any {
-                        it.permission == imagePermission && it.status == PermissionStatus.Granted
-                    }) {
-                    // lanzar selector de galería
+                val galleryPermission = permissionsState.permissions.find { it.permission == imagePermissionName }
+
+                if (galleryPermission?.status == PermissionStatus.Granted) {
+                    // Lanzar selector de galería
                     pickImageLauncher.launch("image/*")
                 } else {
-                    // solicitar permiso
+                    // Solicitar permiso
                     permissionsState.launchMultiplePermissionRequest()
                 }
             }
         )
     }
 
-    // UI
+    // Efecto para logout (Navegación)
+    LaunchedEffect(uiState.isLoggedOut) {
+        if (uiState.isLoggedOut) {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
+    // --- UI ---
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Mi Perfil") })
@@ -141,11 +164,20 @@ fun ProfileScreen(
                         selected = selectedItem == index,
                         onClick = {
                             selectedItem = index
-                            if (navController.currentDestination?.route != screen.route) {
-                                navController.navigate(screen.route)
+                            if (screen != Screen.Profile) { // Solo navegar si no estamos ya aquí
+                                navController.navigate(screen.route) {
+                                    // Evitar pilas gigantes de navegación
+                                    popUpTo(Screen.Home.route) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
                         },
-                        label = { Text(screen.route) },
+                        label = {
+                            // Nombre bonito para la ruta
+                            val label = if(screen == Screen.Home) "Inicio" else "Perfil"
+                            Text(label)
+                        },
                         icon = {
                             Icon(
                                 imageVector = if (screen == Screen.Home) Icons.Default.Home else Icons.Default.Person,
@@ -172,10 +204,8 @@ fun ProfileScreen(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable {
-                        // Solicitar permisos y luego mostrar el diálogo
-                        val allPermissionsGranted = permissionsState.permissions.all {
-                            it.status == PermissionStatus.Granted
-                        }
+                        // Comprobamos si tenemos algun permiso
+                        val allPermissionsGranted = permissionsState.allPermissionsGranted
                         if (allPermissionsGranted) {
                             showImagePicker = true
                         } else {
@@ -210,17 +240,18 @@ fun ProfileScreen(
             }
 
             // Error
-            if (uiState.error != null) {
+            uiState.error?.let { errorMsg ->
                 Text(
-                    text = uiState.error ?: "",
+                    text = errorMsg,
                     color = MaterialTheme.colorScheme.error
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Nombre y correo del usuario (desde /auth/me)
+            // Nombre y correo del usuario (Adaptado al nuevo modelo User)
             uiState.user?.let { user ->
-                Text(text = user.name, style = MaterialTheme.typography.titleMedium)
+                // CORRECCIÓN: Antes era user.name, ahora en el modelo es user.nombre
+                Text(text = user.nombre, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(text = user.email, style = MaterialTheme.typography.bodyMedium)
 
@@ -231,13 +262,14 @@ fun ProfileScreen(
             Button(
                 onClick = {
                     viewModel.logout()
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Home.route) { inclusive = true }
-                    }
+                    // La navegación se maneja en el LaunchedEffect arriba
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
+                    .padding(horizontal = 32.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
             ) {
                 Text("Cerrar sesión")
             }
@@ -251,16 +283,18 @@ fun ProfileScreen(
 fun createImageUri(context: Context): Uri? {
     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
     val imageFileName = "profile_avatar_$timeStamp.jpg"
+    // Usamos cacheDir o externalCacheDir para temporales, o filesDir si quieres persistencia manual
     val storageDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
 
     return try {
         val imageFile = File(storageDir, imageFileName)
         FileProvider.getUriForFile(
             context,
-            "${context.packageName}.fileprovider",
+            "${context.packageName}.fileprovider", // Asegúrate que esto coincida con tu AndroidManifest
             imageFile
         )
     } catch (e: Exception) {
+        e.printStackTrace()
         null
     }
 }

@@ -2,16 +2,12 @@ package com.example.perfulandia.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-// Importamos el Repositorio y las clases de dominio/datos
 import com.example.perfulandia.data.repository.AuthRepository
 import com.example.perfulandia.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
 
 /**
  * Estado de la UI de Login
@@ -20,74 +16,45 @@ import java.net.UnknownHostException
 data class LoginUiState(
     val isLoading: Boolean = false,
     val user: User? = null,
-    val error: String? = null
+    val error: String? = null,
+    val isSuccess: Boolean = false // Flag útil para navegación
 )
 
 /**
  * ViewModel: Maneja la lógica de login y el estado de la pantalla.
- * Ahora inyecta AuthRepository, desacoplando la lógica de la capa de datos.
+ * Inyecta AuthRepository, desacoplando la lógica de la capa de datos.
  */
 class LoginViewModel(
-    // 1. INYECCIÓN DE DEPENDENCIA: Usamos el Repositorio de la capa de dominio/datos
+    // INYECCIÓN DE DEPENDENCIA: Usamos el Repositorio de la capa de dominio/datos
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    fun login(email: String, password: String) {
-
-        // 2. Preparamos el estado de carga
-        _uiState.value = _uiState.value.copy(
-            isLoading = true,
-            error = null,
-            user = null
-        )
-
+    fun login(email: String, pass: String) {
         viewModelScope.launch {
+            // 1. Estado de carga
+            _uiState.value = LoginUiState(isLoading = true)
 
-            // 3. Llamamos al Repositorio, que devuelve Result<User>.
-            // NOTA: Se llama directamente con email y password, tal como está definido en AuthRepository.
-            val result = authRepository.login(email, password)
+            // 2. Llamada al repositorio (devuelve Result<User>)
+            val result = authRepository.login(email, pass)
 
-            // 4. Manejamos el resultado y actualizamos el StateFlow
-            val newState = result.fold(
-                onSuccess = { userObject ->
-                    LoginUiState(
-                        isLoading = false,
-                        user = userObject, // Éxito: Guardamos el modelo de dominio User
-                        error = null
-                    )
-                },
-                onFailure = { exception ->
-                    // Lógica robusta de manejo de errores, manteniendo tu estructura original
-                    val friendlyMessage = when (exception) {
-                        is HttpException -> {
-                            when (exception.code()) {
-                                400 -> "Datos inválidos. Revisa el correo y la contraseña."
-                                401, 403 -> "Usuario o contraseña incorrectos."
-                                404 -> "Servicio no encontrado. Intenta nuevamente más tarde."
-                                429 -> "Demasiados intentos. Espera un momento e inténtalo otra vez."
-                                500 -> "Error en el servidor. Intenta nuevamente más tarde."
-                                else -> "Error inesperado (${exception.code()}). Intenta de nuevo."
-                            }
-                        }
-                        is UnknownHostException ->
-                            "No hay conexión a internet. Revisa tu red e inténtalo otra vez."
-                        is SocketTimeoutException ->
-                            "El servidor tardó demasiado en responder. Intenta de nuevo."
-                        else ->
-                            exception.localizedMessage ?: "Ocurrió un error desconocido."
-                    }
-
-                    LoginUiState(
-                        isLoading = false,
-                        user = null,
-                        error = friendlyMessage
-                    )
-                }
-            )
-            _uiState.value = newState
+            // 3. Manejo del resultado
+            result.onSuccess { user ->
+                _uiState.value = LoginUiState(
+                    isLoading = false,
+                    user = user,
+                    isSuccess = true,
+                    error = null
+                )
+            }.onFailure { exception ->
+                // El repositorio ya nos da un mensaje amigable (ej. "Credenciales inválidas")
+                _uiState.value = LoginUiState(
+                    isLoading = false,
+                    error = exception.message ?: "Error desconocido"
+                )
+            }
         }
     }
 

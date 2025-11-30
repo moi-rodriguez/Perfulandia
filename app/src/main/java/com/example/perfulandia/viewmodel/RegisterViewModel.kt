@@ -1,157 +1,83 @@
 package com.example.perfulandia.viewmodel
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-// Importamos los Repositorios de la nueva arquitectura
 import com.example.perfulandia.data.repository.AuthRepository
-import com.example.perfulandia.repository.AvatarRepository
-// Importamos el Modelo de Dominio de Usuario
 import com.example.perfulandia.model.User
-
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
 
 /**
- * Estado de la UI de Perfil
- * @param user El modelo de dominio User. Contiene toda la información del usuario logueado.
+ * Representa el estado de la interfaz de usuario en la pantalla de Registro.
+ *
+ * @property isLoading Indica si hay una operación de registro en curso.
+ * @property user El usuario resultante si el registro fue exitoso.
+ * @property error Mensaje de error en caso de fallo, o null si no hay error.
+ * @property isSuccess Flag simple para indicar que el registro completó correctamente.
  */
-data class ProfileUiState(
-    val isLoading: Boolean = true,
+data class SignupUiState(
+    val isLoading: Boolean = false,
     val user: User? = null,
     val error: String? = null,
-    val avatarUri: Uri? = null
+    val isSuccess: Boolean = false
 )
 
 /**
- * ViewModel de perfil:
- * - Carga datos remotos (/auth/me) usando AuthRepository
- * - Maneja avatar local (DataStore) usando AvatarRepository
- * - Permite cerrar sesión (AuthRepository)
- * * *NOTA: Eliminamos AndroidViewModel y AppDependencies para usar inyección directa.*
+ * ViewModel encargado de la lógica de negocio para el registro de nuevos usuarios.
+ *
+ * @property authRepository Repositorio encargado de la comunicación con la API de autenticación.
  */
-class ProfileViewModel(
-    // 1. INYECCIÓN DE DEPENDENCIAS
-    private val authRepository: AuthRepository,
-    private val avatarRepository: AvatarRepository
+class RegisterViewModel(
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    // Estado privado mutable
-    private val _uiState = MutableStateFlow(ProfileUiState())
-
-    // Estado público observado por la UI
-    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
-
-    init {
-        loadSavedAvatar()
-        loadUserProfile()
-    }
+    // Estado mutable interno (Backing property)
+    private val _uiState = MutableStateFlow(SignupUiState())
 
     /**
-     * Carga avatar guardado localmente (DataStore)
+     * Estado público inmutable que la UI observará.
      */
-    private fun loadSavedAvatar() {
-        viewModelScope.launch {
-            // Recolectamos el flujo del avatar y actualizamos el estado
-            avatarRepository.getAvatarUri().collect { savedUri: Uri? ->
-                _uiState.update { it.copy(avatarUri = savedUri) }
-            }
-        }
-    }
+    val uiState: StateFlow<SignupUiState> = _uiState.asStateFlow()
 
     /**
-     * Llama a authRepository.getProfile() para obtener los datos del usuario actual
-     * *NOTA: El repositorio ahora devuelve el modelo de dominio User, simplificando el mapeo.*
+     * Intenta registrar un nuevo usuario en el sistema.
+     *
+     * @param nombre El nombre completo del usuario.
+     * @param email El correo electrónico del usuario.
+     * @param password La contraseña elegida por el usuario.
      */
-    fun loadUserProfile() {
-        // Aseguramos que solo cargamos si el usuario tiene sesión activa, para evitar peticiones innecesarias
+    fun register(nombre: String, email: String, password: String) {
         viewModelScope.launch {
-            if (!authRepository.isLoggedIn()) {
-                _uiState.update { it.copy(isLoading = false, user = null, error = "Usuario no autenticado.") }
-                return@launch
-            }
+            // 1. Emitimos estado de carga
+            _uiState.value = SignupUiState(isLoading = true)
 
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            // 2. Llamamos al repositorio de forma asíncrona
+            val result = authRepository.register(nombre, email, password)
 
-            val result = authRepository.getProfile()
-
-            _uiState.update { current ->
-                result.fold(
-                    onSuccess = { userDomainModel ->
-                        // El repositorio ya devolvió el modelo de dominio 'User' limpio
-                        current.copy(
-                            isLoading = false,
-                            user = userDomainModel, // Usamos el modelo de dominio directamente
-                            error = null
-                        )
-                    },
-                    onFailure = { exception ->
-                        val friendlyMessage = when (exception) {
-                            is HttpException -> {
-                                when (exception.code()) {
-                                    401, 403 -> "Sesión no válida. Inicia sesión nuevamente."
-                                    404 -> "No se pudo cargar tu perfil."
-                                    500 -> "Error en el servidor. Intenta más tarde."
-                                    else -> "Error al cargar el perfil (${exception.code()})."
-                                }
-                            }
-                            is UnknownHostException ->
-                                "No hay conexión a internet. Revisa tu red."
-                            is SocketTimeoutException ->
-                                "El servidor tardó demasiado en responder."
-                            else ->
-                                exception.localizedMessage ?: "Ocurrió un error al cargar el perfil."
-                        }
-
-                        current.copy(
-                            isLoading = false,
-                            // Si falla, el usuario debe ser null
-                            user = null,
-                            error = friendlyMessage
-                        )
-                    }
+            // 3. Manejamos el resultado (Éxito o Fallo)
+            result.onSuccess { user ->
+                _uiState.value = SignupUiState(
+                    isLoading = false,
+                    user = user,
+                    isSuccess = true,
+                    error = null
+                )
+            }.onFailure { exception ->
+                _uiState.value = SignupUiState(
+                    isLoading = false,
+                    error = exception.message ?: "Error desconocido al registrar"
                 )
             }
         }
     }
 
     /**
-     * Actualiza el avatar del usuario y lo guarda en DataStore
+     * Restablece el estado de la UI a sus valores iniciales.
+     * Útil cuando se navega fuera de la pantalla y se regresa.
      */
-    fun updateAvatar(uri: Uri?) {
-        viewModelScope.launch {
-            avatarRepository.saveAvatarUri(uri)
-            // El estado de avatarUri se actualiza automáticamente vía el Flow de loadSavedAvatar()
-        }
-    }
-
-    /**
-     * CERRAR SESIÓN:
-     * - Llama al repositorio para borrar token/user_id
-     * - Borra avatar local
-     * - Limpia el estado del perfil
-     */
-    fun logout() {
-        viewModelScope.launch {
-            // El AuthRepository ahora maneja la limpieza de la sesión (token, user_id)
-            authRepository.logout()
-
-            // Borrar avatar persistido
-            avatarRepository.clearAvatarUri()
-
-            // Limpiar estado en la UI
-            _uiState.value = ProfileUiState(
-                isLoading = false,
-                user = null,
-                error = null,
-                avatarUri = null
-            )
-        }
+    fun resetState() {
+        _uiState.value = SignupUiState()
     }
 }

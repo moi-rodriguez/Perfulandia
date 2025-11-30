@@ -3,114 +3,102 @@ package com.example.perfulandia.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-// Importamos los Repositorios de la nueva arquitectura
 import com.example.perfulandia.data.repository.AuthRepository
-import com.example.perfulandia.repository.AvatarRepository
-// Importamos el Modelo de Dominio de Usuario
+import com.example.perfulandia.data.repository.AvatarRepository
 import com.example.perfulandia.model.User
-
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
 
-/**
- * Estado de la UI de Perfil
- */
 data class ProfileUiState(
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = false,
     val user: User? = null,
+    val avatarUri: Uri? = null,
     val error: String? = null,
-    val avatarUri: Uri? = null
+    val isLoggedOut: Boolean = false
 )
 
 /**
- * ViewModel de perfil actualizado.
- * Inyecta AuthRepository y AvatarRepository.
+ * ViewModel para la pantalla de Perfil.
+ * Gestiona la carga de datos del usuario, actualización de avatar y cierre de sesión.
  */
 class ProfileViewModel(
     private val authRepository: AuthRepository,
     private val avatarRepository: AvatarRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ProfileUiState())
+    private val _uiState = MutableStateFlow(ProfileUiState(isLoading = true))
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {
-        loadSavedAvatar()
         loadUserProfile()
     }
 
-    private fun loadSavedAvatar() {
+    /**
+     * Carga la información del usuario y su avatar.
+     */
+    private fun loadUserProfile() {
         viewModelScope.launch {
-            avatarRepository.getAvatarUri().collect { savedUri: Uri? ->
-                _uiState.update { it.copy(avatarUri = savedUri) }
-            }
-        }
-    }
+            _uiState.value = _uiState.value.copy(isLoading = true)
 
-    fun loadUserProfile() {
-        _uiState.update { it.copy(isLoading = true, error = null) }
+            // 1. Cargar Avatar local
+            val savedAvatar = avatarRepository.getAvatarUri().first()
 
-        viewModelScope.launch {
-            // Usamos el AuthRepository que ya devuelve el usuario limpio
+            // 2. Cargar Datos del Usuario (Perfil)
+            // Intentamos obtener el perfil fresco de la API, si falla, usamos los datos de sesión local
             val result = authRepository.getProfile()
 
-            _uiState.update { current ->
-                result.fold(
-                    onSuccess = { userDomainModel ->
-                        current.copy(
-                            isLoading = false,
-                            user = userDomainModel,
-                            error = null
-                        )
-                    },
-                    onFailure = { exception ->
-                        val friendlyMessage = when (exception) {
-                            is HttpException -> {
-                                when (exception.code()) {
-                                    401, 403 -> "Sesión no válida. Inicia sesión nuevamente."
-                                    404 -> "No se pudo cargar tu perfil."
-                                    500 -> "Error en el servidor."
-                                    else -> "Error al cargar el perfil."
-                                }
-                            }
-                            is UnknownHostException -> "No hay conexión a internet."
-                            is SocketTimeoutException -> "El servidor tardó demasiado."
-                            else -> exception.localizedMessage ?: "Error desconocido."
-                        }
-
-                        current.copy(
-                            isLoading = false,
-                            user = null,
-                            error = friendlyMessage
-                        )
-                    }
+            result.onSuccess { user ->
+                _uiState.value = ProfileUiState(
+                    isLoading = false,
+                    user = user,
+                    avatarUri = savedAvatar
                 )
+            }.onFailure { e ->
+                // Fallback: Intentar recuperar datos básicos de la sesión si la API falla
+                val name = authRepository.getUserName()
+                val email = authRepository.getUserEmail()
+
+                if (name != null && email != null) {
+                    // Creamos un usuario temporal con los datos locales
+                    val localUser = User(id = "", nombre = name, email = email, role = "user")
+                    _uiState.value = ProfileUiState(
+                        isLoading = false,
+                        user = localUser,
+                        avatarUri = savedAvatar,
+                        error = "Modo offline: No se pudo actualizar el perfil completo."
+                    )
+                } else {
+                    _uiState.value = ProfileUiState(isLoading = false, error = e.message)
+                }
             }
         }
     }
 
+    /**
+     * Actualiza el avatar seleccionado por el usuario.
+     */
     fun updateAvatar(uri: Uri?) {
         viewModelScope.launch {
             avatarRepository.saveAvatarUri(uri)
+            _uiState.value = _uiState.value.copy(avatarUri = uri)
         }
     }
 
+    /**
+     * Cierra la sesión del usuario y limpia datos locales.
+     */
     fun logout() {
         viewModelScope.launch {
-            authRepository.logout()
-            avatarRepository.clearAvatarUri()
-            _uiState.value = ProfileUiState(
-                isLoading = false,
-                user = null,
-                error = null,
-                avatarUri = null
-            )
+            try {
+                authRepository.logout()
+                avatarRepository.clearAvatarUri() // Opcional: limpiar avatar al salir
+                _uiState.value = _uiState.value.copy(isLoggedOut = true)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Error al cerrar sesión")
+            }
         }
     }
 }

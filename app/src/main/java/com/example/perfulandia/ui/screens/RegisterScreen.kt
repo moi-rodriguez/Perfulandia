@@ -1,6 +1,8 @@
 package com.example.perfulandia.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -15,40 +17,47 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavController
 import com.example.perfulandia.AppDependencies
 import com.example.perfulandia.ui.navigation.Screen
-import com.example.perfulandia.viewmodel.LoginViewModel
+import com.example.perfulandia.viewmodel.RegisterViewModel
 
+/**
+ * Pantalla de Registro (RegisterScreen).
+ *
+ * Permite a un nuevo usuario crear una cuenta ingresando nombre, email y contraseña.
+ * Si el registro es exitoso, navega automáticamente al Home.
+ */
 @Composable
-fun LoginScreen(
+fun RegisterScreen(
     navController: NavController
 ) {
-    // 1. Obtenemos las dependencias desde nuestra clase AppDependencies
+    // 1. Obtener contexto y dependencias
     val context = LocalContext.current
     val dependencies = remember { AppDependencies.getInstance(context) }
 
-    // 2. Usamos el Factory para "inyectar" el repositorio en el ViewModel
-    val viewModel: LoginViewModel = viewModel(
+    // 2. Inyección de dependencias usando Factory para el RegisterViewModel
+    val viewModel: RegisterViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
-                // Aquí le decimos: "Cuando quieras un LoginViewModel, créalo ASÍ:"
-                LoginViewModel(dependencies.authRepository)
+                RegisterViewModel(dependencies.authRepository)
             }
         }
     )
 
-    // --- El resto de tu UI sigue igual ---
-
     // Estados del formulario
+    var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var confirmPassword by rememberSaveable { mutableStateOf("") }
 
+    // Estado del ViewModel
     val uiState by viewModel.uiState.collectAsState()
 
-    // Snackbars
+    // Snackbar para feedback
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Efecto de Navegación (Éxito)
+    // 3. Efecto: Navegación al Home en caso de éxito
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
+            // Navegar al Home y limpiar el historial de Login/Registro
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
             }
@@ -56,7 +65,7 @@ fun LoginScreen(
         }
     }
 
-    // Efecto de Error
+    // 4. Efecto: Mostrar errores en Snackbar
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMsg ->
             snackbarHostState.showSnackbar(errorMsg)
@@ -70,14 +79,30 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()), // Permite scroll en pantallas pequeñas
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = "Bienvenido a Perfulandia", style = MaterialTheme.typography.headlineMedium)
+            Text(
+                text = "Crear Cuenta",
+                style = MaterialTheme.typography.headlineMedium
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Campo Nombre
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Nombre Completo") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo Email
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -88,6 +113,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Campo Password
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -97,11 +123,42 @@ fun LoginScreen(
                 visualTransformation = PasswordVisualTransformation()
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo Confirmar Password
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text("Confirmar Contraseña") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                isError = password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword
+            )
+
+            if (password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword) {
+                Text(
+                    text = "Las contraseñas no coinciden",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Botón Registrar
             Button(
-                onClick = { viewModel.login(email, password) },
-                enabled = !uiState.isLoading,
+                onClick = {
+                    if (password == confirmPassword) {
+                        viewModel.register(name, email, password)
+                    }
+                },
+                enabled = !uiState.isLoading &&
+                        name.isNotBlank() &&
+                        email.isNotBlank() &&
+                        password.isNotBlank() &&
+                        (password == confirmPassword),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (uiState.isLoading) {
@@ -110,16 +167,17 @@ fun LoginScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Iniciar Sesión")
+                    Text("Registrarse")
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Volver al Login
             TextButton(
-                onClick = { navController.navigate(Screen.Register.route) }
+                onClick = { navController.popBackStack() }
             ) {
-                Text("¿No tienes cuenta? Regístrate")
+                Text("¿Ya tienes cuenta? Inicia Sesión")
             }
         }
     }
