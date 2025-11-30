@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     // API de Producción en Render
-    private const val BASE_URL = "https://perfulandia-api-3lqq.onrender.com/api/"
+    private const val BASE_URL = "https://perfulandia-api-ww2w.onrender.com/api/"
 
     /**
      * Inicializa Retrofit con el contexto de la app.
