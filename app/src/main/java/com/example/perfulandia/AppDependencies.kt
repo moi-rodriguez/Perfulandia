@@ -1,7 +1,7 @@
 package com.example.perfulandia
 
 import android.content.Context
-import com.example.perfulandia.repository.AvatarRepository
+import com.example.perfulandia.data.repository.AvatarRepository
 
 // Esta clase actúa como un contenedor de dependencias.
 class AppDependencies(context: Context) {

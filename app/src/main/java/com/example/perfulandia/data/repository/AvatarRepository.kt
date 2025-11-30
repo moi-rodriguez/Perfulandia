@@ -1,4 +1,4 @@
-package com.example.perfulandia.repository
+package com.example.perfulandia.data.repository
 
 import android.content.Context
 import android.net.Uri

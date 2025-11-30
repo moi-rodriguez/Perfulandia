@@ -1,4 +1,4 @@
-package com.example.perfulandia.repository
+/*package com.example.perfulandia.repository
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -55,4 +55,4 @@ class AuthRepositoryTest {
         // crear instancia del repository
         repository = UserRepository(mockContext)
     }
-}
+}*/

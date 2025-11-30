@@ -1,39 +1,33 @@
 package com.example.perfulandia.model
 
-/*
-    Modelos
-    - User:
-        id, nombre, email, role createdAt
-        métodos: isAdmin(), isUser()
-
-    - Entidades (Perfume, Categoria, Cliente, Pedido, Resena):
-        Siguen el EntityBase del backend:
-        id, nombre, descripcion, imagen, imagenThumbnail, createdAt, updatedAt
-        métodos: hasImage(), getImageUrl()
-
-    - resource:
-        Clase sellada para manejar estados en la UI: Success, Error, Loading
+/**
+ * Interfaz común para todas las entidades que tienen imagen y descripción.
+ * Esto permite reutilizar componentes de UI (Cards) para Perfumes, Categorías, etc.
  */
+interface BaseItem {
+    val id: String
+    val nombre: String
+    val descripcion: String?
+    val imagen: String?
+    val imagenThumbnail: String?
+
+    fun hasImage(): Boolean = !imagen.isNullOrEmpty()
+
+    // Prioriza el thumbnail si existe, sino usa la imagen normal
+    fun getImageUrl(): String? = if (!imagenThumbnail.isNullOrEmpty()) imagenThumbnail else imagen
+}
 
 /**
  * Modelo de dominio para Usuario
- * Representa un usuario autenticado del sistema
-*/
+ */
 data class User(
     val id: String,
     val nombre: String,
     val email: String,
-    val role: String,  // "admin" o "user"
+    val role: String,
     val createdAt: String? = null
 ) {
-    /**
-     * Verifica si el usuario es admin
-     */
     fun isAdmin(): Boolean = role.equals("admin", ignoreCase = true)
-
-    /**
-     * Verifica si el usuario es user
-     */
     fun isUser(): Boolean = role.equals("user", ignoreCase = true)
 }
 
@@ -41,92 +35,69 @@ data class User(
  * Modelo de dominio para Perfume
  */
 data class Perfume(
-    val id: String,
-    val nombre: String,
-    val descripcion: String? = null,
-    val imagen: String? = null,
-    val imagenThumbnail: String? = null,
+    override val id: String,
+    override val nombre: String,
+    override val descripcion: String? = null,
+    override val imagen: String? = null,
+    override val imagenThumbnail: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null
-) {
-    /**
-     * Verifica si tiene imagen
-     */
-    fun hasImage(): Boolean = !imagen.isNullOrEmpty()
-
-    /**
-     * Obtiene la URL de imagen o thumbnail, priorizando el thumbnail
-     */
-    fun getImageUrl(): String? = imagenThumbnail ?: imagen
-}
+) : BaseItem
 
 /**
  * Modelo de dominio para Categoria
  */
 data class Categoria(
-    val id: String,
-    val nombre: String,
-    val descripcion: String? = null,
-    val imagen: String? = null,
-    val imagenThumbnail: String? = null,
+    override val id: String,
+    override val nombre: String,
+    override val descripcion: String? = null,
+    override val imagen: String? = null,
+    override val imagenThumbnail: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null
-) {
-    fun hasImage(): Boolean = !imagen.isNullOrEmpty()
-    fun getImageUrl(): String? = imagenThumbnail ?: imagen
-}
+) : BaseItem
 
 /**
  * Modelo de dominio para Cliente
  */
 data class Cliente(
-    val id: String,
-    val nombre: String,
-    val descripcion: String? = null,
-    val imagen: String? = null,
-    val imagenThumbnail: String? = null,
+    override val id: String,
+    override val nombre: String,
+    override val descripcion: String? = null,
+    override val imagen: String? = null,
+    override val imagenThumbnail: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null
-) {
-    fun hasImage(): Boolean = !imagen.isNullOrEmpty()
-    fun getImageUrl(): String? = imagenThumbnail ?: imagen
-}
+) : BaseItem
 
 /**
  * Modelo de dominio para Pedido
  */
 data class Pedido(
-    val id: String,
-    val nombre: String,
-    val descripcion: String? = null,
-    val imagen: String? = null,
-    val imagenThumbnail: String? = null,
+    override val id: String,
+    override val nombre: String,
+    override val descripcion: String? = null,
+    override val imagen: String? = null,
+    override val imagenThumbnail: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null
-) {
-    fun hasImage(): Boolean = !imagen.isNullOrEmpty()
-    fun getImageUrl(): String? = imagenThumbnail ?: imagen
-}
+) : BaseItem
 
 /**
  * Modelo de dominio para Reseña
  */
 data class Resena(
-    val id: String,
-    val nombre: String,
-    val descripcion: String? = null,
-    val imagen: String? = null,
-    val imagenThumbnail: String? = null,
+    override val id: String,
+    override val nombre: String,
+    override val descripcion: String? = null,
+    override val imagen: String? = null,
+    override val imagenThumbnail: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null
-) {
-    fun hasImage(): Boolean = !imagen.isNullOrEmpty()
-    fun getImageUrl(): String? = imagenThumbnail ?: imagen
-}
+) : BaseItem
 
 /**
- * Clase sellada para representar el estado de operaciones asíncronas
- * Útil para ViewModels y UI
+ * Clase sellada para representar el estado de operaciones asíncronas en la UI
  */
 sealed class Resource<T>(
     val data: T? = null,
