@@ -22,13 +22,7 @@ import retrofit2.http.Path
  */
 interface PerfumeApi {
 
-    /**
-     * GET /perfume
-     * Listar todos los perfumes
-     *
-     * @return Lista de perfumes
-     */
-    @GET("perfume")
+    @GET("perfume/filtros")
     suspend fun getAllPerfumes(): Response<PerfumesResponse>
 
     /**

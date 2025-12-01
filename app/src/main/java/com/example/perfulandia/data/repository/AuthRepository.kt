@@ -7,24 +7,12 @@ import com.example.perfulandia.data.remote.api.AuthApi
 import com.example.perfulandia.data.remote.dto.LoginRequest
 import com.example.perfulandia.data.remote.dto.RegisterRequest
 
-/**
- * AuthRepository: Maneja la autenticación y usuarios
- *
- * Responsabilidades:
- * - Login y registro de usuarios
- * - Gestión de sesión (guardar/limpiar token)
- * - Obtener perfil y lista de usuarios
- */
 class AuthRepository(
     private val authApi: AuthApi,
     private val sessionManager: SessionManager,
     private val userMapper: UserMapper = UserMapper
 ) {
 
-    /**
-     * Login del usuario
-     * @return Result con UserDto si es exitoso, o Exception si falla
-     */
     suspend fun login(email: String, password: String): Result<User> {
         return try {
             val request = LoginRequest(email, password)
@@ -32,20 +20,15 @@ class AuthRepository(
 
             if (response.isSuccessful) {
                 val body = response.body()
-
                 if (body != null && body.success && body.data != null) {
-                    val authData = body.data // Accedemos al objeto intermedio
-
+                    val authData = body.data
                     sessionManager.saveSession(
-                        token = authData.token, // Sacamos el token de data
+                        token = authData.token,
                         userId = authData.user._id,
-                        // Protección: Usamos el nombre del formulario si el del server viene null
                         userName = authData.user.nombre ?: "Usuario",
                         userEmail = authData.user.email,
                         userRole = authData.user.role
                     )
-
-                    // Retornamos el usuario mapeado
                     Result.success(UserMapper.fromDto(authData.user))
                 } else {
                     Result.failure(Exception(body?.message ?: "Login fallido"))
@@ -64,9 +47,6 @@ class AuthRepository(
         }
     }
 
-    /**
-     * Registro de nuevo usuario
-     */
     suspend fun register(nombre: String, email: String, password: String): Result<User> {
         return try {
             val request = RegisterRequest(
@@ -83,37 +63,20 @@ class AuthRepository(
 
             if (response.isSuccessful) {
                 val body = response.body()
-
                 if (body != null && body.success && body.data != null) {
                     val authData = body.data
-
-                    // Lógica inteligente: Si el servidor no devuelve nombre, usamos el del formulario
-                    val nombreFinal = authData.user.nombre ?: nombre
-
                     sessionManager.saveSession(
                         token = authData.token,
                         userId = authData.user._id,
-                        userName = nombreFinal, // Guardamos el nombre correcto
+                        userName = authData.user.nombre ?: nombre,
                         userEmail = authData.user.email,
                         userRole = authData.user.role
                     )
-
-                    // Creamos el objeto Usuario manualmente para devolverlo con el nombre correcto
-                    // (En lugar de usar UserMapper.fromDto(authData.user) que pondría "Usuario")
-                    val userDomain = User(
-                        id = authData.user._id,
-                        nombre = nombreFinal,
-                        email = authData.user.email,
-                        role = authData.user.role,
-                        createdAt = authData.user.createdAt
-                    )
-
-                    Result.success(userDomain)
+                    Result.success(UserMapper.fromDto(authData.user))
                 } else {
-                    Result.failure(Exception(body?.message ?: "Registro fallido o respuesta vacía"))
+                    Result.failure(Exception(body?.message ?: "Registro fallido"))
                 }
             } else {
-                // ... (el manejo de errores que ya tenías) ...
                 val errorMessage = when (response.code()) {
                     409 -> "El email ya está registrado"
                     else -> "Error: ${response.code()}"
@@ -125,9 +88,6 @@ class AuthRepository(
         }
     }
 
-    /**
-     * Obtener perfil del usuario actual
-     */
     suspend fun getProfile(): Result<User> {
         return try {
             val response = authApi.getProfile()
@@ -136,9 +96,17 @@ class AuthRepository(
                 val body = response.body()
 
                 if (body != null && body.success) {
-                    Result.success(UserMapper.fromDto(body.user))
+                    // CORRECCIÓN: Obtenemos el DTO directamente de 'data'
+                    val userDto = body.data
+
+                    if (userDto != null) {
+                        Result.success(UserMapper.fromDto(userDto))
+                    } else {
+                        // Si 'data' viene nulo aunque success sea true
+                        Result.failure(Exception("Error al obtener perfil: Datos de usuario vacíos"))
+                    }
                 } else {
-                    Result.failure(Exception("Error al obtener perfil"))
+                    Result.failure(Exception("Error al obtener perfil: Respuesta vacía o success=false"))
                 }
             } else {
                 Result.failure(Exception("Error: ${response.code()}"))
@@ -148,16 +116,11 @@ class AuthRepository(
         }
     }
 
-    /**
-     * Obtener lista de usuarios (solo admin)
-     */
     suspend fun getAllUsers(): Result<List<User>> {
         return try {
             val response = authApi.getUsers()
-
             if (response.isSuccessful) {
                 val body = response.body()
-
                 if (body != null && body.success) {
                     Result.success(UserMapper.fromDtoList(body.data))
                 } else {
@@ -176,38 +139,9 @@ class AuthRepository(
         }
     }
 
-    /**
-     * Cerrar sesión
-     */
-    suspend fun logout() {
-        sessionManager.clearSession()
-    }
-
-    /**
-     * Verificar si el usuario está autenticado
-     */
-    suspend fun isLoggedIn(): Boolean {
-        return sessionManager.isLoggedIn()
-    }
-
-    /**
-     * Verificar si el usuario actual es administrador
-     */
-    suspend fun isAdmin(): Boolean {
-        return sessionManager.isAdmin()
-    }
-
-    /**
-     * Obtener el nombre del usuario actual
-     */
-    suspend fun getUserName(): String? {
-        return sessionManager.getUserName()
-    }
-
-    /**
-     * Obtener el email del usuario actual
-     */
-    suspend fun getUserEmail(): String? {
-        return sessionManager.getUserEmail()
-    }
+    suspend fun logout() = sessionManager.clearSession()
+    suspend fun isLoggedIn() = sessionManager.isLoggedIn()
+    suspend fun isAdmin() = sessionManager.isAdmin()
+    suspend fun getUserName() = sessionManager.getUserName()
+    suspend fun getUserEmail() = sessionManager.getUserEmail()
 }
