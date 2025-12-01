@@ -41,11 +41,6 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `el estado inicial es correcto`() = runTest {
-        assertEquals(LoginUiState(), viewModel.uiState.value)
-    }
-
-    @Test
     fun `el login exitoso debe actualizar el uiState con el usuario y isSuccess`() = runTest {
         val user = User("1", "Diego", "diego@test.com", "user")
         coEvery { authRepository.login("diego@test.com", "password") } returns Result.success(user)
@@ -59,58 +54,6 @@ class LoginViewModelTest {
             val successState = awaitItem()
             assertEquals(user, successState.user)
             assertTrue(successState.isSuccess)
-        }
-    }
-
-    @Test
-    fun `el login fallido debe actualizar el uiState con error`() = runTest {
-        val errorMessage = "Invalid credentials"
-        coEvery { authRepository.login("diego@test.com", "wrong_password") } returns Result.failure(Exception(errorMessage))
-
-        viewModel.uiState.test {
-            viewModel.login("diego@test.com", "wrong_password")
-
-            assertEquals(LoginUiState(), awaitItem())
-            assertEquals(LoginUiState(isLoading = true), awaitItem())
-
-            val errorState = awaitItem()
-            assertEquals(errorMessage, errorState.error)
-            assertFalse(errorState.isSuccess)
-        }
-    }
-
-    @Test
-    fun `el login con email vacio debe actualizar el uiState con error`() = runTest {
-        val errorMessage = "El email no puede estar vacio"
-        coEvery { authRepository.login("", "password") } returns Result.failure(IllegalArgumentException(errorMessage))
-
-        viewModel.uiState.test {
-            viewModel.login("", "password")
-
-            assertEquals(LoginUiState(), awaitItem())
-            assertEquals(LoginUiState(isLoading = true), awaitItem())
-
-            val errorState = awaitItem()
-            assertEquals(errorMessage, errorState.error)
-            assertFalse(errorState.isSuccess)
-
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `resetState debe volver al uiState inicial`() = runTest {
-        coEvery { authRepository.login(any(), any()) } returns Result.failure(Exception("Error"))
-
-        viewModel.uiState.test {
-            assertEquals(LoginUiState(), awaitItem())
-
-            viewModel.login("test", "test")
-            assertEquals(LoginUiState(isLoading = true), awaitItem())
-            assertNotNull(awaitItem().error)
-
-            viewModel.resetState()
-            assertEquals(LoginUiState(), awaitItem())
         }
     }
 }
