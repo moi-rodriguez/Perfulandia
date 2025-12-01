@@ -15,7 +15,7 @@ data class UserDto(
     val _id: String,
 
     @SerializedName("nombre")
-    val nombre: String,
+    val nombre: String? = null,
 
     @SerializedName("email")
     val email: String,

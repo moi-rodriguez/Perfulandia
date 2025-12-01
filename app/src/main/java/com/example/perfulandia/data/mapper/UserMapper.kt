@@ -21,7 +21,7 @@ object UserMapper {
     fun fromDto(dto: UserDto): User {
         return User(
             id = dto._id ?: "",
-            nombre = dto.nombre,
+            nombre = dto.nombre ?: "Usuario",
             email = dto.email,
             role = dto.role,
             createdAt = dto.createdAt

@@ -9,48 +9,31 @@ import com.google.gson.annotations.SerializedName
  * Endpoints que usan este DTO:
  * - POST /auth/login → Iniciar sesión
  * - POST /auth/register → Registrar nuevo usuario
- *
- * Ejemplo de respuesta JSON de tu API:
- * {
- *   "success": true,
- *   "message": "Login exitoso",
- *   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NzRhY...",
- *   "user": {
- *     "_id": "674ac123456789abcdef",
- *     "nombre": "Administrador",
- *     "email": "admin@sistema.com",
- *     "role": "admin",
- *     "createdAt": "2024-11-25T10:30:00.000Z"
- *   }
- * }
  */
 data class AuthResponse(
     @SerializedName("success")
     val success: Boolean,
 
-    @SerializedName("token")
-    val token: String,  // Token JWT para autenticación
-
-    @SerializedName("user")
-    val user: UserDto,  // Datos completos del usuario
-
     @SerializedName("message")
-    val message: String? = null  // Mensaje opcional (ej: "Login exitoso")
+    val message: String? = null,
+
+    // leemos el objeto "data" en lugar de "user" y "token" directos
+    @SerializedName("data")
+    val data: AuthData? = null
+)
+
+// Clase auxiliar para leer el contenido de "data"
+data class AuthData(
+    @SerializedName("user")
+    val user: UserDto,
+
+    // CORRECCIÓN: El servidor lo llama "access_token", no "token"
+    @SerializedName("access_token")
+    val token: String
 )
 
 /**
  * ProfileResponse: Respuesta de GET /auth/profile
- *
- * Ejemplo de respuesta JSON:
- * {
- *   "success": true,
- *   "user": {
- *     "_id": "674ac123456789abcdef",
- *     "nombre": "Administrador",
- *     "email": "admin@sistema.com",
- *     "role": "admin"
- *   }
- * }
  */
 data class ProfileResponse(
     @SerializedName("success")
@@ -65,25 +48,6 @@ data class ProfileResponse(
 
 /**
  * UsersResponse: Respuesta de GET /auth/users (lista de usuarios - solo admin)
- *
- * Ejemplo de respuesta JSON:
- * {
- *   "success": true,
- *   "data": [
- *     {
- *       "_id": "674ac123456789abcdef",
- *       "nombre": "Administrador",
- *       "email": "admin@sistema.com",
- *       "role": "admin"
- *     },
- *     {
- *       "_id": "674ac987654321fedcba",
- *       "nombre": "Usuario Normal",
- *       "email": "usuario@sistema.com",
- *       "role": "user"
- *     }
- *   ]
- * }
  */
 data class UsersResponse(
     @SerializedName("success")
