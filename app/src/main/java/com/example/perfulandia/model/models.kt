@@ -37,6 +37,7 @@ data class User(
 data class Perfume(
     override val id: String,
     override val nombre: String,
+    val genero: String? = null,
     override val descripcion: String? = null,
     override val imagen: String? = null,
     override val imagenThumbnail: String? = null,
