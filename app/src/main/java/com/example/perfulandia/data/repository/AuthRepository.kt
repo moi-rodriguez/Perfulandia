@@ -96,7 +96,7 @@ class AuthRepository(
                 val body = response.body()
 
                 if (body != null && body.success) {
-                    // CORRECCIÓN: Obtenemos el DTO directamente de 'data'
+                    // Mapeo directo de la respuesta 'data' al objeto de dominio User.
                     val userDto = body.data
 
                     if (userDto != null) {

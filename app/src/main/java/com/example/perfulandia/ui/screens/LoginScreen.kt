@@ -25,7 +25,7 @@ fun LoginScreen(
     val context = LocalContext.current
     val dependencies = remember { AppDependencies.getInstance(context) }
 
-    // 2. Usamos el Factory para "inyectar" el repositorio en el ViewModel
+    // 2. Inyección de dependencias usando ViewModelFactory
     val viewModel: LoginViewModel = viewModel(
         factory = viewModelFactory {
             initializer {

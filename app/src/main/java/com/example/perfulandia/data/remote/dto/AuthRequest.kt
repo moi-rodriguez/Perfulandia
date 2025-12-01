@@ -15,7 +15,6 @@ data class LoginRequest(
 
 /**
  * RegisterRequest: Datos para registrar un nuevo usuario
- * CORREGIDO: Se agregaron los campos faltantes según la documentación de la API
  */
 data class RegisterRequest(
     @SerializedName("nombre")
@@ -27,7 +26,7 @@ data class RegisterRequest(
     @SerializedName("password")
     val password: String,
 
-    // IMPORTANTE: La API exige que sea "CLIENTE" (en mayúsculas)
+    // // El rol debe ser exactamente "CLIENTE" para usuarios finales según requerimientos de la API.
     @SerializedName("role")
     val role: String = "CLIENTE",
 

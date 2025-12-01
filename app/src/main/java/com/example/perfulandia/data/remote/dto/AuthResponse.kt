@@ -14,9 +14,7 @@ data class AuthData(
 )
 
 /**
- * ProfileResponse: CORREGIDO
- * Mapeamos 'data' directamente a UserDto, eliminando la clase intermedia ProfileData
- * que causaba el problema de anidación extra.
+ * ProfileResponse: Envoltorio para la respuesta del perfil de usuario.
  */
 data class ProfileResponse(
     @SerializedName("success")
@@ -25,7 +23,7 @@ data class ProfileResponse(
     @SerializedName("message")
     val message: String? = null,
 
-    // CAMBIO CRUCIAL: data es directamente el UserDto
+    // Contiene los datos del usuario directamente.
     @SerializedName("data")
     val data: UserDto? = null
 )

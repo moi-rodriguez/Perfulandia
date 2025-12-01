@@ -29,7 +29,7 @@ class PerfumeRepository(
                 val body = response.body()
                 // Verificamos que el cuerpo no sea nulo y que el flag 'success' sea true
                 if (body != null && body.success) {
-                    // AQUÍ ESTÁ LA MAGIA: Usamos el Mapper para convertir los datos
+                    // // Transformación de DTO (Capa de Red) a Modelo (Capa de Dominio) usando Mapper.
                     val perfumesDomain = PerfumeMapper.fromDtoList(body.data)
                     Result.success(perfumesDomain)
                 } else {

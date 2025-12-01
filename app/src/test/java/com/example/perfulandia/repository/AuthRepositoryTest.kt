@@ -176,4 +176,33 @@ class AuthRepositoryTest {
             mockSessionManager.saveSession(any(), any(), any(), any(), any())
         }
     }
+
+    @Test
+    fun `registro fallido debe retornar Failure y no guardar sesion`() = runTest {
+        // Given
+        val nombre = "Usuario Test"
+        val email = "existe@test.com"
+        val password = "password123"
+        val errorMessage = "El email ya está registrado"
+
+        // Simulamos una respuesta "exitosa" de red (HTTP 200) pero con success=false en el cuerpo
+        val apiResponse = AuthResponse(success = false, message = errorMessage, data = null)
+        val response = Response.success(apiResponse)
+
+        // Configurar mock para retornar esa respuesta de fallo
+        // Usamos any() para el request porque el repositorio rellena campos hardcoded (teléfono, rol, etc.) internamente
+        coEvery { mockAuthApi.register(any()) } returns response
+
+        // When
+        val result = repository.register(nombre, email, password)
+
+        // Then
+        assertTrue("El resultado debería ser Failure", result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+
+        // Verificar que NO se llamó a guardar sesión
+        coVerify(exactly = 0) {
+            mockSessionManager.saveSession(any(), any(), any(), any(), any())
+        }
+    }
 }

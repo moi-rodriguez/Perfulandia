@@ -1,14 +1,7 @@
 package com.example.perfulandia.ui.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -16,24 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -43,47 +20,46 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.perfulandia.AppDependencies
 import com.example.perfulandia.model.Perfume
 import com.example.perfulandia.ui.navigation.Screen
+import com.example.perfulandia.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController
 ) {
-    // Lista harcodeada de perfumes con género
-    val hardcodedPerfumes = listOf(
-        Perfume(id = "1", nombre = "Chanel N°5", genero = "Femenino", descripcion = "El perfume de la eternidad.", imagen = "https://media.falabella.com/falabellaCL/270202_1/w=1500,h=1500,fit=cover"),
-        Perfume(id = "2", nombre = "Dior Sauvage", genero = "Masculino", descripcion = "Una frescura radical y noble.", imagen = "https://cdnx.jumpseller.com/sairam/image/5929373/thumb/1500/1500?1654111131"),
-        Perfume(id = "3", nombre = "Creed Aventus", genero = "Masculino", descripcion = "Fuerza, poder y éxito.", imagen = "https://cl-cenco-pim-resizer.ecomm.cencosud.com/unsafe/adaptive-fit-in/3840x0/filters:quality(75)/prd-cl/product-medias/6c2b0238-d04c-47c4-afb4-fb02ecc0773d/MKNFQHO2Y6/MKNFQHO2Y6-1/1758642147254-MKNFQHO2Y6-1-0.jpg"),
-        Perfume(id = "4", nombre = "Light Blue D&G", genero = "Femenino", descripcion = "La quintaesencia de la alegría de vivir.", imagen = "https://media.falabella.com/falabellaCL/4750703_1/w=1500,h=1500,fit=cover"),
-        Perfume(id = "5", nombre = "Black Opium YSL", genero = "Femenino", descripcion = "Un chute de adrenalina.", imagen = "https://cdnx.jumpseller.com/sairam/image/43732462/thumb/1500/1500?1703002665"),
-        Perfume(id = "6", nombre = "CK One", genero = "Unisex", descripcion = "Un perfume para todos.", imagen = "https://static.beautytocare.com/media/catalog/product/c/a/calvin-klein-ck-one-eau-de-toilette-200ml_1.jpg"),
-        Perfume(id = "7", nombre = "Paco Rabanne 1 Million", genero = "Masculino", descripcion = "El aroma del éxito.", imagen = "https://cdnx.jumpseller.com/sairam/image/9047411/thumb/1500/1500?1634971972")
+    // 1. Inyección del ViewModel (igual que hiciste en Login/Register)
+    val context = LocalContext.current
+    val dependencies = remember { AppDependencies.getInstance(context) }
+
+    val viewModel: HomeViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                HomeViewModel(dependencies.perfumeRepository)
+            }
+        }
     )
 
-    var selectedGenero by remember { mutableStateOf<String?>("Todos") }
-
-    val filteredPerfumes = remember(selectedGenero, hardcodedPerfumes) {
-        if (selectedGenero == "Todos") {
-            hardcodedPerfumes
-        } else {
-            hardcodedPerfumes.filter { it.genero == selectedGenero }
-        }
-    }
+    // 2. Observamos el estado del ViewModel (que ya trae los datos falsos)
+    val uiState by viewModel.uiState.collectAsState()
 
     // Navegación Inferior
     val items = listOf(Screen.Home, Screen.Profile)
-    var selectedItem by remember { mutableStateOf(0) }
+    var selectedItem by remember { mutableIntStateOf(0) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Perfulandia") },
                 actions = {
-                    IconButton(onClick = { /* TODO: Navegar al Carrito */ }) {
+                    IconButton(onClick = { /* Navegar al Carrito */ }) {
                         Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
                     }
                 }
@@ -121,7 +97,9 @@ fun HomeScreen(
                 .padding(innerPadding)
                 .fillMaxWidth()
         ) {
+
             // --- FILTROS POR GÉNERO ---
+            // Ahora usamos el estado del ViewModel y su función filterByGenero
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -131,22 +109,30 @@ fun HomeScreen(
                 val generos = listOf("Todos", "Masculino", "Femenino", "Unisex")
                 generos.forEach { genero ->
                     FilterChip(
-                        selected = selectedGenero == genero,
-                        onClick = { selectedGenero = genero },
+                        selected = uiState.selectedGenero == genero,
+                        onClick = { viewModel.filterByGenero(genero) },
                         label = { Text(genero) }
                     )
                 }
             }
 
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 160.dp),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(filteredPerfumes) { perfume ->
-                    PerfumeCard(perfume = perfume) {
-                        // navController.navigate("detail/${perfume.id}")
+            // --- CONTENIDO ---
+            if (uiState.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 160.dp),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Usamos uiState.perfumes (la lista ya filtrada por el VM)
+                    items(uiState.perfumes) { perfume ->
+                        PerfumeCard(perfume = perfume) {
+                            // Acción click
+                        }
                     }
                 }
             }
@@ -154,15 +140,10 @@ fun HomeScreen(
     }
 }
 
-
-/**
- * Componente individual para mostrar un perfume
- */
+// ... PerfumeCard sigue igual ...
 @Composable
-fun PerfumeCard(
-    perfume: Perfume,
-    onClick: () -> Unit
-) {
+fun PerfumeCard(perfume: Perfume, onClick: () -> Unit) {
+    // (Tu código de PerfumeCard se mantiene igual)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -201,8 +182,9 @@ fun PerfumeCard(
                 color = MaterialTheme.colorScheme.secondary
             )
 
+            // Precio Hardcodeado visualmente
             Text(
-                text = "$ 29.990", // Precio simulado
+                text = "$ 29.990",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -210,7 +192,7 @@ fun PerfumeCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
-                onClick = { /* Acción Agregar */ },
+                onClick = { },
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 8.dp)
             ) {

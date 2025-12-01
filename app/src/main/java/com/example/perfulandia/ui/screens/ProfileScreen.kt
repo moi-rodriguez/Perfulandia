@@ -45,10 +45,10 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
 
-    // 1. OBTENER DEPENDENCIAS (Crucial para que no falle el ViewModel)
+    // Obtención de dependencias del grafo de la aplicación.
     val dependencies = remember { AppDependencies.getInstance(context) }
 
-    // 2. INYECTAR VIEWMODEL CON FACTORY
+    // Inicialización del ViewModel con inyección manual de dependencias.
     val viewModel: ProfileViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
@@ -250,7 +250,6 @@ fun ProfileScreen(
 
             // Nombre y correo del usuario (Adaptado al nuevo modelo User)
             uiState.user?.let { user ->
-                // CORRECCIÓN: Antes era user.name, ahora en el modelo es user.nombre
                 Text(text = user.nombre, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(text = user.email, style = MaterialTheme.typography.bodyMedium)

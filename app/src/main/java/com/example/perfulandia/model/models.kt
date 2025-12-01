@@ -46,58 +46,6 @@ data class Perfume(
 ) : BaseItem
 
 /**
- * Modelo de dominio para Categoria
- */
-data class Categoria(
-    override val id: String,
-    override val nombre: String,
-    override val descripcion: String? = null,
-    override val imagen: String? = null,
-    override val imagenThumbnail: String? = null,
-    val createdAt: String? = null,
-    val updatedAt: String? = null
-) : BaseItem
-
-/**
- * Modelo de dominio para Cliente
- */
-data class Cliente(
-    override val id: String,
-    override val nombre: String,
-    override val descripcion: String? = null,
-    override val imagen: String? = null,
-    override val imagenThumbnail: String? = null,
-    val createdAt: String? = null,
-    val updatedAt: String? = null
-) : BaseItem
-
-/**
- * Modelo de dominio para Pedido
- */
-data class Pedido(
-    override val id: String,
-    override val nombre: String,
-    override val descripcion: String? = null,
-    override val imagen: String? = null,
-    override val imagenThumbnail: String? = null,
-    val createdAt: String? = null,
-    val updatedAt: String? = null
-) : BaseItem
-
-/**
- * Modelo de dominio para Reseña
- */
-data class Resena(
-    override val id: String,
-    override val nombre: String,
-    override val descripcion: String? = null,
-    override val imagen: String? = null,
-    override val imagenThumbnail: String? = null,
-    val createdAt: String? = null,
-    val updatedAt: String? = null
-) : BaseItem
-
-/**
  * Clase sellada para representar el estado de operaciones asíncronas en la UI
  */
 sealed class Resource<T>(

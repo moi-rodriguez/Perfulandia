@@ -19,10 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * Crea el diálogo de selección de imagen para el avatar
- *
- * ¿Por qué un componente separado?:
- * Separar el diálogo en su propio archivo lo hace reutilizable y más fácil de mantener.
+ * Diálogo modal para seleccionar el origen de la imagen (Cámara o Galería).
  */
 @Composable
 fun ImagePickerDialog(

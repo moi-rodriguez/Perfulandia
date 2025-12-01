@@ -2,99 +2,75 @@ package com.example.perfulandia.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.perfulandia.data.repository.CategoriaRepository
 import com.example.perfulandia.data.repository.PerfumeRepository
-import com.example.perfulandia.model.Categoria
 import com.example.perfulandia.model.Perfume
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * Estado de la pantalla Home.
- * @property allPerfumes La lista completa original (sin filtrar).
- * @property filteredPerfumes La lista que se debe mostrar en pantalla (filtrada).
- * @property selectedCategoryId El ID de la categoría seleccionada (null = "Todos").
- */
 data class HomeUiState(
     val isLoading: Boolean = false,
-    val allPerfumes: List<Perfume> = emptyList(),
-    val filteredPerfumes: List<Perfume> = emptyList(),
-    val categories: List<Categoria> = emptyList(),
-    val selectedCategoryId: String? = null,
+    val perfumes: List<Perfume> = emptyList(),      // Lista filtrada que ve el usuario
+    val allPerfumes: List<Perfume> = emptyList(),   // Copia de respaldo para resetear filtros
+    val selectedGenero: String = "Todos",
     val error: String? = null
 )
 
 class HomeViewModel(
-    private val perfumeRepository: PerfumeRepository,
-    private val categoriaRepository: CategoriaRepository
+    private val perfumeRepository: PerfumeRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    // Datos de prueba para desarrollo y previsualización (Mock Data).
+    private val mockPerfumes = listOf(
+        Perfume(id = "1", nombre = "Chanel N°5", genero = "Femenino", descripcion = "El perfume de la eternidad.", imagen = "https://media.falabella.com/falabellaCL/270202_1/w=1500,h=1500,fit=cover"),
+        Perfume(id = "2", nombre = "Dior Sauvage", genero = "Masculino", descripcion = "Una frescura radical y noble.", imagen = "https://cdnx.jumpseller.com/sairam/image/5929373/thumb/1500/1500?1654111131"),
+        Perfume(id = "3", nombre = "Creed Aventus", genero = "Masculino", descripcion = "Fuerza, poder y éxito.", imagen = "https://cl-cenco-pim-resizer.ecomm.cencosud.com/unsafe/adaptive-fit-in/3840x0/filters:quality(75)/prd-cl/product-medias/6c2b0238-d04c-47c4-afb4-fb02ecc0773d/MKNFQHO2Y6/MKNFQHO2Y6-1/1758642147254-MKNFQHO2Y6-1-0.jpg"),
+        Perfume(id = "4", nombre = "Light Blue D&G", genero = "Femenino", descripcion = "La quintaesencia de la alegría de vivir.", imagen = "https://media.falabella.com/falabellaCL/4750703_1/w=1500,h=1500,fit=cover"),
+        Perfume(id = "5", nombre = "Black Opium YSL", genero = "Femenino", descripcion = "Un chute de adrenalina.", imagen = "https://cdnx.jumpseller.com/sairam/image/43732462/thumb/1500/1500?1703002665"),
+        Perfume(id = "6", nombre = "CK One", genero = "Unisex", descripcion = "Un perfume para todos.", imagen = "https://static.beautytocare.com/media/catalog/product/c/a/calvin-klein-ck-one-eau-de-toilette-200ml_1.jpg"),
+        Perfume(id = "7", nombre = "Paco Rabanne 1 Million", genero = "Masculino", descripcion = "El aroma del éxito.", imagen = "https://cdnx.jumpseller.com/sairam/image/9047411/thumb/1500/1500?1634971972")
+    )
+
     init {
-        loadData()
+        loadPerfumes()
     }
 
-    /**
-     * Carga inicial de datos (Categorías y Perfumes).
-     */
-    fun loadData() {
+    fun loadPerfumes() {
+        /**
+         * Carga la lista de perfumes.
+         * Actualmente utiliza datos locales (Mock) para pruebas.
+         * TODO: Descomentar llamada al repositorio al conectar con API de producción.
+         */
+
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.update { it.copy(isLoading = true, error = null) }
 
-            // 1. Cargar Categorías
-            val catResult = categoriaRepository.getAllCategorias()
-            val categoriesList = catResult.getOrDefault(emptyList())
+            // SIMULAMOS CARGA (opcional, para ver el loading un momento)
+            // kotlinx.coroutines.delay(500)
 
-            // 2. Cargar Perfumes
-            val perfResult = perfumeRepository.getAllPerfumes()
-
-            perfResult.onSuccess { perfumes ->
-                _uiState.value = HomeUiState(
+            _uiState.update {
+                it.copy(
                     isLoading = false,
-                    allPerfumes = perfumes,
-                    filteredPerfumes = perfumes, // Al inicio mostramos todos
-                    categories = categoriesList,
-                    selectedCategoryId = null
-                )
-            }.onFailure { e ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = "Error al cargar perfumes: ${e.message}"
+                    allPerfumes = mockPerfumes,
+                    perfumes = mockPerfumes // Al inicio mostramos todos
                 )
             }
         }
     }
 
-    /**
-     * Filtra la lista de perfumes por categoría.
-     * @param categoryId El ID de la categoría a filtrar (o null para ver todos).
-     */
-    fun selectCategory(categoryId: String?) {
-        val currentState = _uiState.value
-
-        // Si ya estaba seleccionada, la deseleccionamos (toggle)
-        val newSelectedId = if (currentState.selectedCategoryId == categoryId) null else categoryId
-
-        val filteredList = if (newSelectedId == null) {
-            currentState.allPerfumes // Mostrar todos
-        } else {
-            // Filtrar localmente (tu modelo Perfume no tiene campo categoriaId visible en models.kt,
-            // pero asumiremos que el filtrado sería por backend o que agregaremos esa lógica después.
-            // *NOTA PARA MVP:* Como el modelo `Perfume` actual no tiene `categoriaId`,
-            // este filtro por ahora no hará nada visualmente exacto a menos que agregues ese campo.
-            // Simulemos un filtro simple o dejémoslo listo para cuando actualices el modelo:
-            currentState.allPerfumes
-            // TODO: Descomentar cuando Perfume tenga categoriaId:
-            // currentState.allPerfumes.filter { it.categoriaId == newSelectedId }
+    fun filterByGenero(genero: String) {
+        _uiState.update { current ->
+            val filteredList = if (genero == "Todos") {
+                current.allPerfumes
+            } else {
+                current.allPerfumes.filter { it.genero == genero }
+            }
+            current.copy(selectedGenero = genero, perfumes = filteredList)
         }
-
-        _uiState.value = currentState.copy(
-            selectedCategoryId = newSelectedId,
-            filteredPerfumes = filteredList
-        )
     }
 }
