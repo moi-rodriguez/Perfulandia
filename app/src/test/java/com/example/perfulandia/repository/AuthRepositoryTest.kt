@@ -150,4 +150,30 @@ class AuthRepositoryTest {
             )
         }
     }
+
+    @Test
+    fun `login con credenciales incorrectas debe retornar Failure`() = runTest {
+        // Given
+        val email = "test@example.com"
+        val password = "wrongpassword"
+        val errorMessage = "Credenciales inválidas"
+
+        val apiResponse = AuthResponse(success = false, message = errorMessage, data = null)
+        val response = Response.success(apiResponse)
+
+        // Configurar mock para retornar respuesta de fallo
+        coEvery { mockAuthApi.login(LoginRequest(email, password)) } returns response
+
+        // When
+        val result = repository.login(email, password)
+
+        // Then
+        assertTrue("El resultado debería ser Failure", result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+
+        // Verificar que NO se llamó a guardar sesión
+        coVerify(exactly = 0) {
+            mockSessionManager.saveSession(any(), any(), any(), any(), any())
+        }
+    }
 }

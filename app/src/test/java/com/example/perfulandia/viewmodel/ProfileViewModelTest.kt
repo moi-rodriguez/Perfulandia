@@ -50,12 +50,13 @@ class ProfileViewModelTest {
         Dispatchers.setMain(testDispatcher)
 
         // Inicializar los mocks
-        authRepository = mockk()
+        authRepository = mockk(relaxUnitFun = true) // Usar relaxUnitFun para ignorar llamadas a funciones Unit
         avatarRepository = mockk()
 
-        // Comportamiento por defecto de los mocks para el `init` del ViewModel
-        coEvery { avatarRepository.getAvatarUri() } returns flowOf(testAvatarUri)
-        coEvery { authRepository.getProfile() } returns Result.success(testUser)
+        // --- INICIO DE LA SOLUCIÓN ---
+        // Se mueve la configuración específica de los mocks a cada test individual
+        // para evitar conflictos y asegurar un estado predecible.
+        // --- FIN DE LA SOLUCIÓN ---
     }
 
     @After
@@ -66,6 +67,13 @@ class ProfileViewModelTest {
 
     @Test
     fun `el perfil del usuario y el avatar se cargan correctamente durante la inicializacion`() = runTest(testDispatcher) {
+        // --- INICIO DE LA SOLUCIÓN ---
+        // Dado: configurar los mocks para el caso de éxito
+        coEvery { avatarRepository.getAvatarUri() } returns flowOf(testAvatarUri)
+        coEvery { authRepository.getProfile() } returns Result.success(testUser)
+        coEvery { authRepository.getUserName() } returns "Test User"
+        // --- FIN DE LA SOLUCIÓN ---
+
         // Cuando se inicializa el ViewModel
         viewModel = ProfileViewModel(authRepository, avatarRepository)
 
