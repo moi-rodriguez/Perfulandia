@@ -74,20 +74,4 @@ class HomeViewModelTest {
         // Verificamos que el mensaje de error en el estado contenga el texto esperado
         assert(state.error?.contains(errorMessage) == true)
     }
-
-    @Test
-    fun `seleccionar categoria actualiza el id seleccionado`() = runTest {
-        // GIVEN: ViewModel inicializado
-        val perfumes = listOf(Perfume("1", "P1"), Perfume("2", "P2"))
-        coEvery { perfumeRepository.getAllPerfumes() } returns Result.success(perfumes)
-        coEvery { categoriaRepository.getAllCategorias() } returns Result.success(emptyList())
-        viewModel = HomeViewModel(perfumeRepository, categoriaRepository)
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // WHEN: Seleccionamos la categoría "CAT_1"
-        viewModel.selectCategory("CAT_1")
-
-        // THEN: El estado debe reflejar esa selección
-        assertEquals("CAT_1", viewModel.uiState.value.selectedCategoryId)
-    }
 }

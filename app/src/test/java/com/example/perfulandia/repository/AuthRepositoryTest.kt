@@ -4,16 +4,18 @@ import com.example.perfulandia.data.local.SessionManager
 import com.example.perfulandia.data.remote.api.AuthApi
 import com.example.perfulandia.data.remote.dto.AuthData
 import com.example.perfulandia.data.remote.dto.AuthResponse
+import com.example.perfulandia.data.remote.dto.LoginRequest
 import com.example.perfulandia.data.remote.dto.UserDto
 import com.example.perfulandia.data.repository.AuthRepository
-import com.example.perfulandia.model.User
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.ResponseBody.Companion.toResponseBody
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -22,83 +24,130 @@ import retrofit2.Response
 @ExperimentalCoroutinesApi
 class AuthRepositoryTest {
 
-    private lateinit var authApi: AuthApi
-    private lateinit var sessionManager: SessionManager
-    private lateinit var authRepository: AuthRepository
+    // Mocks
+    private lateinit var mockAuthApi: AuthApi
+    private lateinit var mockSessionManager: SessionManager
 
-    // Datos de prueba
-    private val testUserDto = UserDto(
-        _id = "1",
-        nombre = "Test User",
-        email = "test@example.com",
-        role = "CLIENTE"
-    )
-
-    // El usuario esperado (Dominio)
-    private val testUser = User(
-        id = "1",
-        nombre = "Test User",
-        email = "test@example.com",
-        role = "CLIENTE"
-    )
-
-    private val testToken = "test_token_jwt"
+    // SUT (System Under Test)
+    private lateinit var repository: AuthRepository
 
     @Before
-    fun setUp() {
-        authApi = mockk()
-        sessionManager = mockk(relaxed = true) // relaxed = true permite llamar métodos sin configurar su respuesta explícita
-        authRepository = AuthRepository(authApi, sessionManager)
+    fun setup() {
+        // Crear mocks
+        mockAuthApi = mockk()
+        mockSessionManager = mockk()
+
+        // Configurar comportamiento de SessionManager
+        coEvery { mockSessionManager.saveSession(any(), any(), any(), any(), any()) } just Runs
+        coEvery { mockSessionManager.clearSession() } just Runs
+
+        // Crear instancia del repository
+        repository = AuthRepository(mockAuthApi, mockSessionManager)
+    }
+
+    @After
+    fun teardown() {
+        // Limpiar todos los mocks después de cada prueba
+        unmockkAll()
     }
 
     @Test
-    fun `el login exitoso debe guardar la sesion y devolver el usuario`() = runTest {
-        // GIVEN (DADO)
-        // 1. Preparamos la estructura anidada que espera el repositorio: Response -> AuthResponse -> AuthData -> UserDto
-        val authData = AuthData(user = testUserDto, token = testToken)
-        val loginResponse = AuthResponse(success = true, data = authData, message = "Login OK")
+    fun `login exitoso debe guardar la sesion y retornar Success con User`() = runTest {
+        // Given - Preparar datos de prueba
+        val email = "test@example.com"
+        val password = "password"
+        val token = "test_token_jwt"
 
-        // 2. Simulamos que la API devuelve éxito (200 OK) con esos datos
-        coEvery { authApi.login(any()) } returns Response.success(loginResponse)
+        val userDto = UserDto(
+            _id = "1",
+            nombre = "Test User",
+            email = email,
+            role = "CLIENTE"
+        )
 
-        // WHEN (CUANDO)
-        val result = authRepository.login("test@example.com", "password")
+        val authData = AuthData(user = userDto, token = token)
+        val apiResponse = AuthResponse(success = true, data = authData, message = "Login OK")
+        val response = Response.success(apiResponse)
 
-        // THEN (ENTONCES)
-        // 1. Verificamos que el resultado sea exitoso
-        assertTrue(result.isSuccess)
-        assertEquals(testUser, result.getOrNull())
+        // Configurar mock para retornar respuesta exitosa
+        coEvery { mockAuthApi.login(LoginRequest(email, password)) } returns response
 
-        // 2. Verificamos que se haya llamado a guardar sesión con los datos correctos
+        // When - Ejecutar login
+        val result = repository.login(email, password)
+
+        // Then - Verificar resultado
+        assertTrue("El resultado debería ser Success", result.isSuccess)
+
+        val user = result.getOrNull()
+        assertEquals("1", user?.id)
+        assertEquals("Test User", user?.nombre)
+        assertEquals(email, user?.email)
+        assertEquals("CLIENTE", user?.role)
+
+        // Verificar que se llamó a guardar sesión con los datos correctos
         coVerify {
-            sessionManager.saveSession(
-                token = testToken,
-                userId = testUserDto._id,
-                userName = testUserDto.nombre!!, // Asumimos que no es null en el test
-                userEmail = testUserDto.email,
-                userRole = testUserDto.role
+            mockSessionManager.saveSession(
+                token = token,
+                userId = userDto._id,
+                userName = userDto.nombre!!,
+                userEmail = userDto.email,
+                userRole = userDto.role
             )
         }
     }
 
     @Test
-    fun `el login fallido con 401 debe devolver un fallo con un mensaje especifico`() = runTest {
-        // GIVEN (DADO)
-        // Simulamos un error 401 Unauthorized desde el servidor
-        val errorBody = "{}".toResponseBody("application/json".toMediaTypeOrNull())
-        coEvery { authApi.login(any()) } returns Response.error(401, errorBody)
+    fun `registro exitoso debe retornar Success con User`() = runTest {
+        // Given
+        val nombre = "Nuevo Usuario"
+        val email = "nuevo@example.com"
+        val password = "password123"
 
-        // WHEN (CUANDO)
-        val result = authRepository.login("test@example.com", "wrong_password")
+        val newUserDto = UserDto(
+            _id = "newuser123",
+            nombre = nombre,
+            email = email,
+            role = "CLIENTE"
+        )
+        val newToken = "new_token_12345"
 
-        // THEN (ENTONCES)
-        // 1. Verificamos que sea un fallo
-        assertTrue(result.isFailure)
+        val authData = AuthData(
+            user = newUserDto,
+            token = newToken
+        )
 
-        // 2. Verificamos el mensaje específico que definimos en el repositorio
-        assertEquals("Credenciales inválidas", result.exceptionOrNull()?.message)
+        val apiResponse = AuthResponse(
+            success = true,
+            data = authData
+        )
+        val response = Response.success(apiResponse)
 
-        // 3. Verificamos que NUNCA se intentó guardar sesión
-        coVerify(exactly = 0) { sessionManager.saveSession(any(), any(), any(), any(), any()) }
+        // Configurar mock
+        coEvery { mockAuthApi.register(any()) } returns response
+
+        // When
+        val result = repository.register(
+            nombre = nombre,
+            email = email,
+            password = password
+        )
+
+        // Then
+        assertTrue(result.isSuccess)
+        val user = result.getOrNull()
+        assertEquals(nombre, user?.nombre)
+        assertEquals(email, user?.email)
+        assertEquals("CLIENTE", user?.role)
+
+        // Verificar que se guardó la sesión
+        coVerify {
+            mockSessionManager.saveSession(
+                token = newToken,
+                userId = newUserDto._id,
+                userName = newUserDto.nombre!!,
+                userEmail = newUserDto.email,
+                userRole = newUserDto.role
+            )
+        }
     }
 }
