@@ -25,10 +25,13 @@ data class User(
     val nombre: String,
     val email: String,
     val role: String,
+    val telefono: String? = null,
+    val direccion: String? = null,
+    val preferencias: List<String> = emptyList(),
     val createdAt: String? = null
 ) {
     fun isAdmin(): Boolean = role.equals("admin", ignoreCase = true)
-    fun isUser(): Boolean = role.equals("user", ignoreCase = true)
+    fun isUser(): Boolean = role.equals("user", ignoreCase = true) || role.equals("cliente", ignoreCase = true)
 }
 
 /**

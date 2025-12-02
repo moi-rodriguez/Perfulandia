@@ -23,6 +23,15 @@ data class UserDto(
     @SerializedName("role")
     val role: String,
 
+    @SerializedName("telefono")
+    val telefono: String? = null,
+
+    @SerializedName("direccion")
+    val direccion: String? = null,
+
+    @SerializedName("preferencias")
+    val preferencias: List<String>? = null,
+
     @SerializedName("createdAt")
     val createdAt: String? = null,
 

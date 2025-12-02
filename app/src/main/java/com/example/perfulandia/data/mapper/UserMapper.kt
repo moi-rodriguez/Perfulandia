@@ -24,6 +24,9 @@ object UserMapper {
             nombre = dto.nombre ?: "Usuario",
             email = dto.email,
             role = dto.role,
+            telefono = dto.telefono,
+            direccion = dto.direccion,
+            preferencias = dto.preferencias ?: emptyList(),
             createdAt = dto.createdAt
         )
     }
@@ -41,6 +44,9 @@ object UserMapper {
             nombre = user.nombre,
             email = user.email,
             role = user.role,
+            telefono = user.telefono,
+            direccion = user.direccion,
+            preferencias = user.preferencias ?: emptyList(),
             createdAt = user.createdAt
         )
     }

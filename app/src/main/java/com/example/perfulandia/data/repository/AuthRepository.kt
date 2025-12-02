@@ -27,7 +27,9 @@ class AuthRepository(
                         userId = authData.user._id,
                         userName = authData.user.nombre ?: "Usuario",
                         userEmail = authData.user.email,
-                        userRole = authData.user.role
+                        userRole = authData.user.role,
+                        userPhone = authData.user.telefono,
+                        userAddress = authData.user.direccion
                     )
                     Result.success(UserMapper.fromDto(authData.user))
                 } else {
@@ -54,8 +56,8 @@ class AuthRepository(
                 email = email,
                 password = password,
                 role = "CLIENTE",
-                telefono = "000000000",
-                direccion = "Sin dirección",
+                telefono = "000000000", // Valor por defecto que envías
+                direccion = "Sin dirección", // Valor por defecto que envías
                 preferencias = listOf("Ninguna")
             )
 
@@ -65,13 +67,18 @@ class AuthRepository(
                 val body = response.body()
                 if (body != null && body.success && body.data != null) {
                     val authData = body.data
+
                     sessionManager.saveSession(
                         token = authData.token,
                         userId = authData.user._id,
                         userName = authData.user.nombre ?: nombre,
                         userEmail = authData.user.email,
-                        userRole = authData.user.role
+                        userRole = authData.user.role,
+                        userPhone = authData.user.telefono,
+                        userAddress = authData.user.direccion
                     )
+                    // ------------------------------
+
                     Result.success(UserMapper.fromDto(authData.user))
                 } else {
                     Result.failure(Exception(body?.message ?: "Registro fallido"))
@@ -141,7 +148,6 @@ class AuthRepository(
 
     suspend fun logout() = sessionManager.clearSession()
     suspend fun isLoggedIn() = sessionManager.isLoggedIn()
-    suspend fun isAdmin() = sessionManager.isAdmin()
     suspend fun getUserName() = sessionManager.getUserName()
     suspend fun getUserEmail() = sessionManager.getUserEmail()
 }

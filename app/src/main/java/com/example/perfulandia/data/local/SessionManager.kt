@@ -31,6 +31,8 @@ class SessionManager(private val context: Context) {
         private val KEY_USER_EMAIL = stringPreferencesKey("user_email")
         private val KEY_USER_ROLE = stringPreferencesKey("user_role")
         private val KEY_IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
+        private val KEY_USER_PHONE = stringPreferencesKey("user_phone")
+        private val KEY_USER_ADDRESS = stringPreferencesKey("user_address")
     }
 
     // ============================================
@@ -50,7 +52,9 @@ class SessionManager(private val context: Context) {
         userId: String,
         userName: String,
         userEmail: String,
-        userRole: String
+        userRole: String,
+        userPhone: String? = null,
+        userAddress: String? = null
     ) {
         context.dataStore.edit { preferences ->
             preferences[KEY_AUTH_TOKEN] = token
@@ -59,15 +63,8 @@ class SessionManager(private val context: Context) {
             preferences[KEY_USER_EMAIL] = userEmail
             preferences[KEY_USER_ROLE] = userRole
             preferences[KEY_IS_LOGGED_IN] = true
-        }
-    }
-
-    /**
-     * Actualiza solo el token (útil para refresh tokens)
-     */
-    suspend fun updateToken(token: String) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_AUTH_TOKEN] = token
+            preferences[KEY_USER_PHONE] = userPhone ?: ""
+            preferences[KEY_USER_ADDRESS] = userAddress ?: ""
         }
     }
 
@@ -82,15 +79,6 @@ class SessionManager(private val context: Context) {
     suspend fun getAuthToken(): String? {
         return context.dataStore.data
             .map { preferences -> preferences[KEY_AUTH_TOKEN] }
-            .first()
-    }
-
-    /**
-     * Obtiene el ID del usuario
-     */
-    suspend fun getUserId(): String? {
-        return context.dataStore.data
-            .map { preferences -> preferences[KEY_USER_ID] }
             .first()
     }
 
@@ -113,15 +101,6 @@ class SessionManager(private val context: Context) {
     }
 
     /**
-     * Obtiene el rol del usuario
-     */
-    suspend fun getUserRole(): String? {
-        return context.dataStore.data
-            .map { preferences -> preferences[KEY_USER_ROLE] }
-            .first()
-    }
-
-    /**
      * Verifica si el usuario está autenticado
      * @return true si hay una sesión activa
      */
@@ -131,26 +110,16 @@ class SessionManager(private val context: Context) {
             .first()
     }
 
-    /**
-     * Obtiene toda la información de la sesión
-     */
-    suspend fun getSessionData(): SessionData? {
-        return context.dataStore.data.map { preferences ->
-            val token = preferences[KEY_AUTH_TOKEN]
-            val userId = preferences[KEY_USER_ID]
-
-            if (token != null && userId != null) {
-                SessionData(
-                    token = token,
-                    userId = userId,
-                    userName = preferences[KEY_USER_NAME] ?: "",
-                    userEmail = preferences[KEY_USER_EMAIL] ?: "",
-                    userRole = preferences[KEY_USER_ROLE] ?: "",
-                    isLoggedIn = preferences[KEY_IS_LOGGED_IN] ?: false
-                )
-            } else {
-                null
-            }
+    // Función útil para recuperar toodo el perfil localmente (ej: modo offline)
+    suspend fun getUserProfileData(): UserProfileData {
+        return context.dataStore.data.map { prefs ->
+            UserProfileData(
+                name = prefs[KEY_USER_NAME] ?: "",
+                email = prefs[KEY_USER_EMAIL] ?: "",
+                role = prefs[KEY_USER_ROLE] ?: "",
+                phone = prefs[KEY_USER_PHONE],
+                address = prefs[KEY_USER_ADDRESS]
+            )
         }.first()
     }
 
@@ -165,33 +134,6 @@ class SessionManager(private val context: Context) {
     val authTokenFlow: Flow<String?> = context.dataStore.data
         .map { preferences -> preferences[KEY_AUTH_TOKEN] }
 
-    /**
-     * Flow que emite el estado de autenticación
-     */
-    val isLoggedInFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences -> preferences[KEY_IS_LOGGED_IN] ?: false }
-
-    /**
-     * Flow que emite los datos completos de la sesión
-     */
-    val sessionDataFlow: Flow<SessionData?> = context.dataStore.data
-        .map { preferences ->
-            val token = preferences[KEY_AUTH_TOKEN]
-            val userId = preferences[KEY_USER_ID]
-
-            if (token != null && userId != null) {
-                SessionData(
-                    token = token,
-                    userId = userId,
-                    userName = preferences[KEY_USER_NAME] ?: "",
-                    userEmail = preferences[KEY_USER_EMAIL] ?: "",
-                    userRole = preferences[KEY_USER_ROLE] ?: "",
-                    isLoggedIn = preferences[KEY_IS_LOGGED_IN] ?: false
-                )
-            } else {
-                null
-            }
-        }
 
     // ============================================
     // LIMPIAR SESIÓN
@@ -210,47 +152,15 @@ class SessionManager(private val context: Context) {
             preferences.remove(KEY_IS_LOGGED_IN)
         }
     }
-
-    /**
-     * Elimina solo el token (mantiene info del usuario)
-     * Útil para casos de seguridad
-     */
-    suspend fun clearToken() {
-        context.dataStore.edit { preferences ->
-            preferences.remove(KEY_AUTH_TOKEN)
-            preferences[KEY_IS_LOGGED_IN] = false
-        }
-    }
-
-    // ============================================
-    // UTILIDADES
-    // ============================================
-
-    /**
-     * Verifica si el usuario es administrador
-     */
-    suspend fun isAdmin(): Boolean {
-        val role = getUserRole()
-        return role?.equals("admin", ignoreCase = true) ?: false
-    }
-
-    /**
-     * Verifica si el token existe y no está vacío
-     */
-    suspend fun hasValidToken(): Boolean {
-        val token = getAuthToken()
-        return !token.isNullOrEmpty()
-    }
 }
 
 /**
- * Data class que representa los datos de la sesión
+ * Data class simple para devolver datos agrupados
  */
-data class SessionData(
-    val token: String,
-    val userId: String,
-    val userName: String,
-    val userEmail: String,
-    val userRole: String,
-    val isLoggedIn: Boolean
+data class UserProfileData(
+    val name: String,
+    val email: String,
+    val role: String,
+    val phone: String?,
+    val address: String?
 )
