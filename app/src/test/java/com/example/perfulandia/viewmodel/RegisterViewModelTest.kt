@@ -60,4 +60,46 @@ class RegisterViewModelTest {
             assertNull(successState.error)
         }
     }
+
+    @Test
+    fun `el registro fallido debe actualizar el uiState con un error`() = runTest {
+        val errorMessage = "Correo invalido."
+        coEvery { authRepository.register(any(), any(), any()) } returns Result.failure(Exception(errorMessage))
+
+        viewModel.uiState.test {
+            viewModel.register("Test User", "test@test.com", "password")
+
+            // Initial state
+            assertEquals(SignupUiState(isLoading = false), awaitItem())
+            // Loading state
+            assertEquals(SignupUiState(isLoading = true), awaitItem())
+            // Error state
+            val errorState = awaitItem()
+            assertNull(errorState.user)
+            assertFalse(errorState.isSuccess)
+            assertFalse(errorState.isLoading)
+            assertEquals(errorMessage, errorState.error)
+        }
+    }
+
+    @Test
+    fun `el registro fallido por contraseña invalida debe actualizar el uiState con un error`() = runTest {
+        val errorMessage = "Contraseña Invalida."
+        coEvery { authRepository.register(any(), any(), any()) } returns Result.failure(Exception(errorMessage))
+
+        viewModel.uiState.test {
+            viewModel.register("Test User", "test@test.com", "invalidpassword")
+
+            // Initial state
+            assertEquals(SignupUiState(isLoading = false), awaitItem())
+            // Loading state
+            assertEquals(SignupUiState(isLoading = true), awaitItem())
+            // Error state
+            val errorState = awaitItem()
+            assertNull(errorState.user)
+            assertFalse(errorState.isSuccess)
+            assertFalse(errorState.isLoading)
+            assertEquals(errorMessage, errorState.error)
+        }
+    }
 }

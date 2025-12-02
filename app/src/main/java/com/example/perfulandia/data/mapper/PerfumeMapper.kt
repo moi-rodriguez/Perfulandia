@@ -27,6 +27,10 @@ object PerfumeMapper {
             descripcion = dto.descripcion,
             imagen = dto.imagen,
             imagenThumbnail = dto.imagenThumbnail,
+            marca = dto.marca,
+            genero = dto.genero,
+            precio = dto.precio ?: 0.0,
+            stock = dto.stock ?: 0,
             createdAt = dto.createdAt,
             updatedAt = dto.updatedAt
         )

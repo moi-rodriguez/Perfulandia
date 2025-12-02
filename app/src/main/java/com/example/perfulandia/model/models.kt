@@ -41,8 +41,11 @@ data class Perfume(
     override val descripcion: String? = null,
     override val imagen: String? = null,
     override val imagenThumbnail: String? = null,
+    val marca: String? = null,
+    val precio: Double = 0.0,
+    val stock: Int = 0,
     val createdAt: String? = null,
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
 ) : BaseItem
 
 /**

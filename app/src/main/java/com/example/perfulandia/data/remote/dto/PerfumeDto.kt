@@ -33,7 +33,22 @@ data class PerfumeDto(
     val createdAt: String? = null,
 
     @SerializedName("updatedAt")
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
+
+    @SerializedName("marca")
+    val marca: String? = null,
+
+    @SerializedName("fragancia")
+    val fragancia: String? = null,
+
+    @SerializedName("genero")
+    val genero: String? = null,
+
+    @SerializedName("precio")
+    val precio: Double? = null,
+
+    @SerializedName("stock")
+    val stock: Int? = null,
 )
 
 /**

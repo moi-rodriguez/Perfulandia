@@ -184,8 +184,9 @@ fun PerfumeCard(perfume: Perfume, onClick: () -> Unit) {
 
             // Precio Hardcodeado visualmente
             Text(
-                text = "$ 29.990",
+                text = "$ ${perfume.precio}",
                 fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
 

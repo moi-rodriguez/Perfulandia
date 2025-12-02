@@ -1,7 +1,6 @@
 package com.example.perfulandia.data.remote.api
 
 import com.example.perfulandia.data.remote.dto.PerfumeResponse
-import com.example.perfulandia.data.remote.dto.PerfumesResponse
 import com.example.perfulandia.data.remote.dto.CreatePerfumeRequest
 import com.example.perfulandia.data.remote.dto.UpdatePerfumeRequest
 import okhttp3.MultipartBody
@@ -22,16 +21,6 @@ import retrofit2.http.Path
  */
 interface PerfumeApi {
 
-    @GET("perfume/filtros")
-    suspend fun getAllPerfumes(): Response<PerfumesResponse>
-
-    /**
-     * GET /perfume/{id}
-     * Obtener un perfume por ID
-     *
-     * @param id ID del perfume
-     * @return Datos del perfume
-     */
     @GET("perfume/{id}")
     suspend fun getPerfumeById(
         @Path("id") id: String
