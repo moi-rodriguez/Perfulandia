@@ -11,8 +11,6 @@ interface BaseItem {
     val imagen: String?
     val imagenThumbnail: String?
 
-    fun hasImage(): Boolean = !imagen.isNullOrEmpty()
-
     // Prioriza el thumbnail si existe, sino usa la imagen normal
     fun getImageUrl(): String? = if (!imagenThumbnail.isNullOrEmpty()) imagenThumbnail else imagen
 }
@@ -29,10 +27,7 @@ data class User(
     val direccion: String? = null,
     val preferencias: List<String> = emptyList(),
     val createdAt: String? = null
-) {
-    fun isAdmin(): Boolean = role.equals("admin", ignoreCase = true)
-    fun isUser(): Boolean = role.equals("user", ignoreCase = true) || role.equals("cliente", ignoreCase = true)
-}
+)
 
 /**
  * Modelo de dominio para Perfume
@@ -58,7 +53,5 @@ sealed class Resource<T>(
     val data: T? = null,
     val message: String? = null
 ) {
-    class Success<T>(data: T) : Resource<T>(data)
     class Error<T>(message: String, data: T? = null) : Resource<T>(data, message)
-    class Loading<T>(data: T? = null) : Resource<T>(data)
 }

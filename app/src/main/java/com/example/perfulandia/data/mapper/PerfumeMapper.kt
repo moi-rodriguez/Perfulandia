@@ -37,25 +37,6 @@ object PerfumeMapper {
     }
 
     /**
-     * Convierte Perfume (modelo de dominio) a PerfumeDto (para el backend)
-     * Para operaciones de actualización
-     *
-     * @param perfume Modelo de dominio
-     * @return PerfumeDto para enviar a la API
-     */
-    fun toDto(perfume: Perfume): PerfumeDto {
-        return PerfumeDto(
-            _id = perfume.id,
-            nombre = perfume.nombre,
-            descripcion = perfume.descripcion,
-            imagen = perfume.imagen,
-            imagenThumbnail = perfume.imagenThumbnail,
-            createdAt = perfume.createdAt,
-            updatedAt = perfume.updatedAt
-        )
-    }
-
-    /**
      * Convierte una lista de PerfumeDto a lista de Perfume
      *
      * @param dtoList Lista de DTOs desde la API
@@ -63,15 +44,5 @@ object PerfumeMapper {
      */
     fun fromDtoList(dtoList: List<PerfumeDto>): List<Perfume> {
         return dtoList.map { fromDto(it) }
-    }
-
-    /**
-     * Convierte una lista de Perfume a lista de PerfumeDto
-     *
-     * @param perfumeList Lista de modelos de dominio
-     * @return Lista de DTOs para la API
-     */
-    fun toDtoList(perfumeList: List<Perfume>): List<PerfumeDto> {
-        return perfumeList.map { toDto(it) }
     }
 }

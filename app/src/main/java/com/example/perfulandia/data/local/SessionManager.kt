@@ -5,7 +5,6 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -100,41 +99,6 @@ class SessionManager(private val context: Context) {
             .first()
     }
 
-    /**
-     * Verifica si el usuario está autenticado
-     * @return true si hay una sesión activa
-     */
-    suspend fun isLoggedIn(): Boolean {
-        return context.dataStore.data
-            .map { preferences -> preferences[KEY_IS_LOGGED_IN] ?: false }
-            .first()
-    }
-
-    // Función útil para recuperar toodo el perfil localmente (ej: modo offline)
-    suspend fun getUserProfileData(): UserProfileData {
-        return context.dataStore.data.map { prefs ->
-            UserProfileData(
-                name = prefs[KEY_USER_NAME] ?: "",
-                email = prefs[KEY_USER_EMAIL] ?: "",
-                role = prefs[KEY_USER_ROLE] ?: "",
-                phone = prefs[KEY_USER_PHONE],
-                address = prefs[KEY_USER_ADDRESS]
-            )
-        }.first()
-    }
-
-    // ============================================
-    // FLOWS REACTIVOS (Observables)
-    // ============================================
-
-    /**
-     * Flow que emite el token cada vez que cambia
-     * Útil para observar cambios en tiempo real
-     */
-    val authTokenFlow: Flow<String?> = context.dataStore.data
-        .map { preferences -> preferences[KEY_AUTH_TOKEN] }
-
-
     // ============================================
     // LIMPIAR SESIÓN
     // ============================================
@@ -153,14 +117,3 @@ class SessionManager(private val context: Context) {
         }
     }
 }
-
-/**
- * Data class simple para devolver datos agrupados
- */
-data class UserProfileData(
-    val name: String,
-    val email: String,
-    val role: String,
-    val phone: String?,
-    val address: String?
-)

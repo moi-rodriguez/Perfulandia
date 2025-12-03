@@ -3,12 +3,12 @@ package com.example.perfulandia.data.remote.dto
 import com.google.gson.annotations.SerializedName
 
 /**
- * UserDto: Representa los datos del usuario que vienen desde la API de Perfulandia
+ * UserDto: Representa los datos del usuario que vienen desde la API
  *
  * Endpoints que usan este DTO:
  * - POST /auth/register → Respuesta con usuario creado
+ * - POST /auth/login -> Respuesta con usuario logeado
  * - GET /auth/profile → Respuesta con perfil del usuario
- * - GET /auth/users → Lista de usuarios (solo admin)
  */
 data class UserDto(
     @SerializedName("_id")

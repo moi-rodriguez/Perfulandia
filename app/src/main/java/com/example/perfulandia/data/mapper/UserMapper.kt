@@ -20,7 +20,7 @@ object UserMapper {
      */
     fun fromDto(dto: UserDto): User {
         return User(
-            id = dto._id ?: "",
+            id = dto._id,
             nombre = dto.nombre ?: "Usuario",
             email = dto.email,
             role = dto.role,
@@ -29,45 +29,5 @@ object UserMapper {
             preferencias = dto.preferencias ?: emptyList(),
             createdAt = dto.createdAt
         )
-    }
-
-    /**
-     * Convierte User (modelo de dominio) a UserDto (para el backend)
-     * Útil para operaciones de actualización
-     *
-     * @param user Modelo de dominio
-     * @return UserDto para enviar a la API
-     */
-    fun toDto(user: User): UserDto {
-        return UserDto(
-            _id = user.id,
-            nombre = user.nombre,
-            email = user.email,
-            role = user.role,
-            telefono = user.telefono,
-            direccion = user.direccion,
-            preferencias = user.preferencias ?: emptyList(),
-            createdAt = user.createdAt
-        )
-    }
-
-    /**
-     * Convierte una lista de UserDto a lista de User
-     *
-     * @param dtoList Lista de DTOs desde la API
-     * @return Lista de modelos de dominio
-     */
-    fun fromDtoList(dtoList: List<UserDto>): List<User> {
-        return dtoList.map { fromDto(it) }
-    }
-
-    /**
-     * Convierte una lista de User a lista de UserDto
-     *
-     * @param userList Lista de modelos de dominio
-     * @return Lista de DTOs para la API
-     */
-    fun toDtoList(userList: List<User>): List<UserDto> {
-        return userList.map { toDto(it) }
     }
 }

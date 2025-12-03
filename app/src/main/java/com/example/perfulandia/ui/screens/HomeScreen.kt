@@ -35,7 +35,8 @@ import com.example.perfulandia.viewmodel.HomeViewModel
 fun HomeScreen(
     navController: NavController
 ) {
-    // 1. Inyección del ViewModel (igual que hiciste en Login/Register)
+
+    // 1. Inyección del ViewModel (igual que en Login/Register)
     val context = LocalContext.current
     val dependencies = remember { AppDependencies.getInstance(context) }
 
@@ -47,7 +48,7 @@ fun HomeScreen(
         }
     )
 
-    // 2. Observamos el estado del ViewModel (que ya trae los datos falsos)
+    // 2. Observamos el estado del ViewModel
     val uiState by viewModel.uiState.collectAsState()
 
     // Navegación Inferior
@@ -59,7 +60,7 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text("Perfulandia") },
                 actions = {
-                    IconButton(onClick = { /* Navegar al Carrito */ }) {
+                    IconButton(onClick = { /* TODO: Navegar al Carrito */ }) {
                         Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
                     }
                 }
@@ -99,14 +100,14 @@ fun HomeScreen(
         ) {
 
             // --- FILTROS POR GÉNERO ---
-            // Ahora usamos el estado del ViewModel y su función filterByGenero
+            // usamos el estado del ViewModel y su función filterByGenero
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                val generos = listOf("Todos", "Masculino", "Femenino", "Unisex")
+                val generos = listOf("Todos", "hombre", "mujer", "unisex")
                 generos.forEach { genero ->
                     FilterChip(
                         selected = uiState.selectedGenero == genero,
@@ -140,10 +141,11 @@ fun HomeScreen(
     }
 }
 
-// ... PerfumeCard sigue igual ...
+// PERFUME CARD
 @Composable
 fun PerfumeCard(perfume: Perfume, onClick: () -> Unit) {
-    // (Tu código de PerfumeCard se mantiene igual)
+    val baseURL = "https://perfulandia-api-ww2w.onrender.com/"
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -156,7 +158,7 @@ fun PerfumeCard(perfume: Perfume, onClick: () -> Unit) {
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(perfume.getImageUrl() ?: "")
+                    .data((baseURL + perfume.getImageUrl()))
                     .crossfade(true)
                     .build(),
                 contentDescription = perfume.nombre,
@@ -182,7 +184,7 @@ fun PerfumeCard(perfume: Perfume, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.secondary
             )
 
-            // Precio Hardcodeado visualmente
+            // Precio
             Text(
                 text = "$ ${perfume.precio}",
                 fontSize = 14.sp,

@@ -69,7 +69,7 @@ fun ProfileScreen(
     val items = listOf(Screen.Home, Screen.Profile)
     var selectedItem by remember { mutableIntStateOf(1) } // 1 es Profile
 
-    // --- Permisos (Igual que tu código original) ---
+    // --- Permisos ---
     val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         listOf(
             Manifest.permission.CAMERA,
@@ -248,7 +248,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Nombre y correo del usuario (Adaptado al nuevo modelo User)
+            // Nombre y correo del usuario
             uiState.user?.let { user ->
                 Text(text = user.nombre, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(4.dp))

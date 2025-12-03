@@ -4,7 +4,6 @@ import com.example.perfulandia.data.remote.dto.AuthResponse
 import com.example.perfulandia.data.remote.dto.LoginRequest
 import com.example.perfulandia.data.remote.dto.RegisterRequest
 import com.example.perfulandia.data.remote.dto.ProfileResponse
-import com.example.perfulandia.data.remote.dto.UsersResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -51,16 +50,6 @@ interface AuthApi {
      */
     @GET("auth/profile")
     suspend fun getProfile(): Response<ProfileResponse>
-
-    /**
-     * GET /auth/users
-     * Obtener lista de usuarios (solo admin)
-     * Requiere: Token JWT en header Authorization + role: admin
-     *
-     *@return Lista de todos los usuarios
-     */
-    @GET("auth/users")
-    suspend fun getUsers(): Response<UsersResponse>
 }
 
 

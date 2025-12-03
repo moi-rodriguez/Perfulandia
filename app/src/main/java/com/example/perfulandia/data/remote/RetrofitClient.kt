@@ -18,7 +18,6 @@ object RetrofitClient {
 
     /**
      * Inicializa Retrofit con el contexto de la app.
-     * Se recomienda llamar una sola vez (por ejemplo desde un ViewModel o Singleton Repository)
      */
     fun create(context: Context): Retrofit {
 

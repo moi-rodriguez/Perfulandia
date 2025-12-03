@@ -31,7 +31,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     var startDestination by remember { mutableStateOf(Screen.Login.route) }
     var isCheckingSession by remember { mutableStateOf(true) }
 
-    // al abrir la app, si hay sesion activa (token guardado) lleva directo a home, y si no, por defecto a login
+    // al abrir la app, si hay sesion activa (token guardado) lleva directo a home,
+    // y si no, por defecto a login
     LaunchedEffect(Unit) {
         val sessionManager = SessionManager(context)
         val token = sessionManager.getAuthToken()

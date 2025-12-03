@@ -29,12 +29,10 @@ class HomeViewModel(
         loadPerfumes()
     }
 
+    /**
+     * Carga la lista de perfumes.
+     */
     fun loadPerfumes() {
-        /**
-         * Carga la lista de perfumes.
-         * Actualmente utiliza datos locales (Mock) para pruebas.
-         * TODO: Descomentar llamada al repositorio al conectar con API de producción.
-         */
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
@@ -61,7 +59,10 @@ class HomeViewModel(
             }
         }
     }
-    
+
+    /**
+     * Filtro de gènero
+     */
     fun filterByGenero(genero: String) {
         _uiState.update { current ->
             val filteredList = if (genero == "Todos") {

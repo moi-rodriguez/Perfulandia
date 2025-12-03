@@ -11,11 +11,6 @@ import retrofit2.Retrofit
  * Centraliza la creación de servicios Retrofit para:
  * - AuthApi (autenticación y usuarios)
  * - PerfumeApi (CRUD de perfumes)
- * - CategoriaApi (CRUD de categorías)
- * - ClienteApi (CRUD de clientes)
- * - PedidoApi (CRUD de pedidos)
- * - ResenaApi (CRUD de reseñas)
- * - UploadApi (subida de imágenes)
  *
  * Uso en Repositories:
  * ```
@@ -40,14 +35,6 @@ object ApiService {
         return retrofit!!
     }
 
-    /**
-     * Resetea la instancia de Retrofit
-     * Útil para testing o cuando cambias de usuario/configuración
-     */
-    fun reset() {
-        retrofit = null
-    }
-
     // ============================================
     // APIs - Proporcionan las interfaces de Retrofit
     // ============================================
@@ -59,7 +46,6 @@ object ApiService {
      * - POST /auth/login
      * - POST /auth/register
      * - GET /auth/profile
-     * - GET /auth/users
      */
     fun provideAuthApi(context: Context): AuthApi {
         return getRetrofit(context).create(AuthApi::class.java)
@@ -70,11 +56,6 @@ object ApiService {
      *
      * Endpoints:
      * - GET /perfume
-     * - POST /perfume
-     * - GET /perfume/{id}
-     * - PATCH /perfume/{id}
-     * - DELETE /perfume/{id}
-     * - POST /perfume/{id}/upload-image
      */
     fun providePerfumeApi(context: Context): PerfumeApi {
         return getRetrofit(context).create(PerfumeApi::class.java)

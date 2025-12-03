@@ -35,7 +35,7 @@ fun LoginScreen(
         }
     )
 
-    // --- El resto de tu UI sigue igual ---
+    // --- UI ---
 
     // Estados del formulario
     var email by rememberSaveable { mutableStateOf("") }

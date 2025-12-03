@@ -83,7 +83,7 @@ class RegisterViewModelTest {
     }
 
     @Test
-    fun `el registro fallido por contraseña invalida debe actualizar el uiState con un error`() = runTest {
+    fun `el registro fallido por contrasena invalida debe actualizar el uiState con un error`() = runTest {
         val errorMessage = "Contraseña Invalida."
         coEvery { authRepository.register(any(), any(), any()) } returns Result.failure(Exception(errorMessage))
 

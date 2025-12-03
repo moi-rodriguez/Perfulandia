@@ -9,8 +9,7 @@ import com.example.perfulandia.data.remote.dto.RegisterRequest
 
 class AuthRepository(
     private val authApi: AuthApi,
-    private val sessionManager: SessionManager,
-    private val userMapper: UserMapper = UserMapper
+    private val sessionManager: SessionManager
 ) {
 
     suspend fun login(email: String, password: String): Result<User> {
@@ -123,31 +122,7 @@ class AuthRepository(
         }
     }
 
-    suspend fun getAllUsers(): Result<List<User>> {
-        return try {
-            val response = authApi.getUsers()
-            if (response.isSuccessful) {
-                val body = response.body()
-                if (body != null && body.success) {
-                    Result.success(UserMapper.fromDtoList(body.data))
-                } else {
-                    Result.failure(Exception("Error al obtener usuarios"))
-                }
-            } else {
-                val errorMessage = when (response.code()) {
-                    403 -> "No tienes permisos de administrador"
-                    401 -> "No estás autenticado"
-                    else -> "Error: ${response.code()}"
-                }
-                Result.failure(Exception(errorMessage))
-            }
-        } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión: ${e.message}"))
-        }
-    }
-
-    suspend fun logout() = sessionManager.clearSession()
-    suspend fun isLoggedIn() = sessionManager.isLoggedIn()
     suspend fun getUserName() = sessionManager.getUserName()
     suspend fun getUserEmail() = sessionManager.getUserEmail()
+    suspend fun logout() = sessionManager.clearSession()
 }

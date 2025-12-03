@@ -7,11 +7,6 @@ import com.google.gson.annotations.SerializedName
  *
  * Endpoints que usan este DTO:
  * - GET /perfume → Lista todos los perfumes
- * - GET /perfume/{id} → Obtiene un perfume por ID
- * - POST /perfume → Crea un nuevo perfume
- * - PATCH /perfume/{id} → Actualiza un perfume
- * - DELETE /perfume/{id} → Elimina un perfume
- * - POST /perfume/{id}/upload-image → Sube imagen a perfume
  */
 data class PerfumeDto(
     @SerializedName("_id")
@@ -52,20 +47,6 @@ data class PerfumeDto(
 )
 
 /**
- * PerfumeResponse: Respuesta al obtener un perfume
- */
-data class PerfumeResponse(
-    @SerializedName("success")
-    val success: Boolean,
-
-    @SerializedName("data")
-    val data: PerfumeDto,
-
-    @SerializedName("message")
-    val message: String? = null
-)
-
-/**
  * PerfumesResponse: Respuesta al listar perfumes
  */
 data class PerfumesResponse(
@@ -77,26 +58,4 @@ data class PerfumesResponse(
 
     @SerializedName("message")
     val message: String? = null
-)
-
-/**
- * CreatePerfumeRequest: Para crear un nuevo perfume
- */
-data class CreatePerfumeRequest(
-    @SerializedName("nombre")
-    val nombre: String,
-
-    @SerializedName("descripcion")
-    val descripcion: String? = null
-)
-
-/**
- * UpdatePerfumeRequest: Para actualizar un perfume
- */
-data class UpdatePerfumeRequest(
-    @SerializedName("nombre")
-    val nombre: String? = null,
-
-    @SerializedName("descripcion")
-    val descripcion: String? = null
 )
