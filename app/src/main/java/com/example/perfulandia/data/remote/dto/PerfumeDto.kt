@@ -3,10 +3,7 @@ package com.example.perfulandia.data.remote.dto
 import com.google.gson.annotations.SerializedName
 
 /**
- * PerfumeDto: Representa un perfume
- *
- * Endpoints que usan este DTO:
- * - GET /perfume → Lista todos los perfumes
+ * PerfumeDto: Representa un perfume recibio de la API
  */
 data class PerfumeDto(
     @SerializedName("_id")
@@ -15,26 +12,14 @@ data class PerfumeDto(
     @SerializedName("nombre")
     val nombre: String,
 
-    @SerializedName("descripcion")
-    val descripcion: String? = null,
-
-    @SerializedName("imagen")
-    val imagen: String? = null,
-
-    @SerializedName("imagenThumbnail")
-    val imagenThumbnail: String? = null,
-
-    @SerializedName("createdAt")
-    val createdAt: String? = null,
-
-    @SerializedName("updatedAt")
-    val updatedAt: String? = null,
-
     @SerializedName("marca")
     val marca: String? = null,
 
     @SerializedName("fragancia")
     val fragancia: String? = null,
+
+    @SerializedName("tamaño")
+    val tamano: Int? = null,
 
     @SerializedName("genero")
     val genero: String? = null,
@@ -44,10 +29,22 @@ data class PerfumeDto(
 
     @SerializedName("stock")
     val stock: Int? = null,
+
+    @SerializedName("categoria")
+    val categoria: String? = null,
+
+    @SerializedName("descripcion")
+    val descripcion: String? = null,
+
+    @SerializedName("imagen")
+    val imagen: String? = null,
+
+    @SerializedName("imagenThumbnail")
+    val imagenThumbnail: String? = null
 )
 
 /**
- * PerfumesResponse: Respuesta al listar perfumes
+ * PerfumesResponse: Respuesta genérica parar listas de perfumes
  */
 data class PerfumesResponse(
     @SerializedName("success")

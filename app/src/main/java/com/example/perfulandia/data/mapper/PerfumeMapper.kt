@@ -24,15 +24,16 @@ object PerfumeMapper {
         return Perfume(
             id = dto._id ?: "", // MongoDB usa _id, lo convierte a id
             nombre = dto.nombre,
-            descripcion = dto.descripcion,
-            imagen = dto.imagen,
-            imagenThumbnail = dto.imagenThumbnail,
             marca = dto.marca,
+            fragancia = dto.fragancia,
+            tamano = dto.tamano,
             genero = dto.genero,
             precio = dto.precio ?: 0.0,
             stock = dto.stock ?: 0,
-            createdAt = dto.createdAt,
-            updatedAt = dto.updatedAt
+            categoriaId = dto.categoria,
+            descripcion = dto.descripcion,
+            imagen = dto.imagen,
+            imagenThumbnail = dto.imagenThumbnail,
         )
     }
 
