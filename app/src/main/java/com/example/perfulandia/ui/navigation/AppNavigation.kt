@@ -21,8 +21,13 @@ import com.example.perfulandia.ui.screens.LoginScreen
 import com.example.perfulandia.ui.screens.RegisterScreen
 import com.example.perfulandia.ui.screens.ProfileScreen
 import com.example.perfulandia.data.local.SessionManager
+import com.example.perfulandia.ui.screens.CartScreen
+import com.example.perfulandia.ui.screens.CreatePerfumeScreen
+import com.example.perfulandia.ui.screens.CreateReviewScreen
 import com.example.perfulandia.ui.screens.ForgotPasswordScreen
 import com.example.perfulandia.ui.screens.MyOrdersScreen
+import com.example.perfulandia.ui.screens.OrderSuccessScreen
+import com.example.perfulandia.ui.screens.PerfumeDetailScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +66,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             startDestination = startDestination,
             modifier = modifier,
         ) {
-            // PANTALLAS EXISTENTES
             composable(route = Screen.Login.route) {
                 LoginScreen(navController = navController)
             }
@@ -81,38 +85,31 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 MyOrdersScreen(navController = navController)
             }
 
-            /*
-
             // PANTALLAS NUEVAS
-            // 1. Carrito y Compra
+
+            // Carrito y Compra
             composable(route = Screen.Cart.route) {
-                // Reemplazar por CartScreen(navController) cuando exista
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Pantalla Carrito") }
+                CartScreen(navController = navController)
             }
             composable(route = Screen.OrderSuccess.route) {
-                // Reemplazar por OrderSuccessScreen(navController)
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Compra Exitosa") }
+                OrderSuccessScreen(navController = navController)
             }
 
-            // 2. Admin
+            // Admin
             composable(route = Screen.CreatePerfume.route) {
-                // Reemplazar por CreatePerfumeScreen(navController)
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Crear Perfume (Admin)") }
+                CreatePerfumeScreen(navController = navController)
             }
 
-            // 3. Rutas con Argumentos
+            // Rutas con Argumentos
             composable(route = Screen.PerfumeDetail.route) { backStackEntry ->
                 val perfumeId = backStackEntry.arguments?.getString("perfumeId")
-                // Reemplazar por PerfumeDetailScreen(navController, perfumeId)
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Detalle Perfume: $perfumeId") }
+                PerfumeDetailScreen(navController = navController, perfumeId = perfumeId)
             }
 
             composable(route = Screen.CreateReview.route) { backStackEntry ->
                 val perfumeId = backStackEntry.arguments?.getString("perfumeId")
-                // Reemplazar por CreateReviewScreen(navController, perfumeId)
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Crear Reseña para: $perfumeId") }
+                CreateReviewScreen(navController = navController, perfumeId = perfumeId)
             }
-            */
         }
     }
 }
