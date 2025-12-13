@@ -43,4 +43,6 @@ sealed class Resource<T>(
     val message: String? = null
 ) {
     class Error<T>(message: String, data: T? = null) : Resource<T>(data, message)
+    class Success<T>(data: T) : Resource<T>(data)
+    class Loading<T>(data: T? = null) : Resource<T>(data)
 }
