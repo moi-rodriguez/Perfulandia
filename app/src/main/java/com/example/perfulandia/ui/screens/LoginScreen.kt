@@ -61,7 +61,7 @@ fun LoginScreen(
         if (uiState.isSuccess) {
             val user = uiState.user
             val route = when (user?.role) {
-                "ADMIN" -> Screen.AdminDashboard.route
+                "ADMIN" -> Screen.CreatePerfume.route
                 else -> Screen.Home.route
             }
             navController.navigate(route) {

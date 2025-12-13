@@ -21,40 +21,38 @@ import com.example.perfulandia.ui.screens.LoginScreen
 import com.example.perfulandia.ui.screens.RegisterScreen
 import com.example.perfulandia.ui.screens.ProfileScreen
 import com.example.perfulandia.data.local.SessionManager
-import com.example.perfulandia.ui.screens.AdminDashboardScreen
 import com.example.perfulandia.ui.screens.ForgotPasswordScreen
 import com.example.perfulandia.ui.screens.MyOrdersScreen
-import com.example.perfulandia.ui.screens.MyReviewsScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
-
     val context = LocalContext.current
+
+    // Estado para controlar la pantalla de inicio
     var startDestination by remember { mutableStateOf(Screen.Login.route) }
     var isCheckingSession by remember { mutableStateOf(true) }
 
-    // al abrir la app, si hay sesion activa (token guardado) lleva directo a home,
-    // y si no, por defecto a login
+    // Verificación de sesión al iniciar
     LaunchedEffect(Unit) {
         val sessionManager = SessionManager(context)
         val token = sessionManager.getAuthToken()
+
+        // Si hay token, navega a Home. Si no, a Login
         startDestination = if (token.isNullOrEmpty()) {
             Screen.Login.route
         } else {
             Screen.Home.route
         }
+
+        // Simula un pequeño delay y terminamos la carga
         kotlinx.coroutines.delay(2000)
         isCheckingSession = false
     }
 
     if (isCheckingSession) {
-        // Pantalla de carga inicial
-        Box(
-            modifier = modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
     } else {
@@ -63,6 +61,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             startDestination = startDestination,
             modifier = modifier,
         ) {
+            // PANTALLAS EXISTENTES
             composable(route = Screen.Login.route) {
                 LoginScreen(navController = navController)
             }
@@ -75,18 +74,45 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             composable(route = Screen.Register.route) {
                 RegisterScreen(navController = navController)
             }
-            composable(route = Screen.AdminDashboard.route) {
-                AdminDashboardScreen(navController = navController)
-            }
             composable(route = Screen.ForgotPassword.route) {
                 ForgotPasswordScreen(navController = navController)
             }
             composable(route = Screen.MyOrders.route) {
                 MyOrdersScreen(navController = navController)
             }
-            composable(route = Screen.MyReviews.route) {
-                MyReviewsScreen(navController = navController)
+
+            /*
+
+            // PANTALLAS NUEVAS
+            // 1. Carrito y Compra
+            composable(route = Screen.Cart.route) {
+                // Reemplazar por CartScreen(navController) cuando exista
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Pantalla Carrito") }
             }
+            composable(route = Screen.OrderSuccess.route) {
+                // Reemplazar por OrderSuccessScreen(navController)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Compra Exitosa") }
+            }
+
+            // 2. Admin
+            composable(route = Screen.CreatePerfume.route) {
+                // Reemplazar por CreatePerfumeScreen(navController)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Crear Perfume (Admin)") }
+            }
+
+            // 3. Rutas con Argumentos
+            composable(route = Screen.PerfumeDetail.route) { backStackEntry ->
+                val perfumeId = backStackEntry.arguments?.getString("perfumeId")
+                // Reemplazar por PerfumeDetailScreen(navController, perfumeId)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Detalle Perfume: $perfumeId") }
+            }
+
+            composable(route = Screen.CreateReview.route) { backStackEntry ->
+                val perfumeId = backStackEntry.arguments?.getString("perfumeId")
+                // Reemplazar por CreateReviewScreen(navController, perfumeId)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Crear Reseña para: $perfumeId") }
+            }
+            */
         }
     }
 }
