@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+GEMINI.md
+
+perfulandia-api.postman_collection.json
