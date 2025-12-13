@@ -1,9 +1,27 @@
 package com.example.perfulandia.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -19,21 +37,13 @@ import com.example.perfulandia.AppDependencies
 import com.example.perfulandia.ui.navigation.Screen
 import com.example.perfulandia.viewmodel.RegisterViewModel
 
-/**
- * Pantalla de Registro (RegisterScreen).
- *
- * Permite a un nuevo usuario crear una cuenta ingresando nombre, email y contraseña.
- * Si el registro es exitoso, navega automáticamente al Home.
- */
 @Composable
 fun RegisterScreen(
     navController: NavController
 ) {
-    // 1. Obtener contexto y dependencias
     val context = LocalContext.current
     val dependencies = remember { AppDependencies.getInstance(context) }
 
-    // 2. Inyección de dependencias usando Factory para el RegisterViewModel
     val viewModel: RegisterViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
@@ -42,22 +52,17 @@ fun RegisterScreen(
         }
     )
 
-    // Estados del formulario
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
 
-    // Estado del ViewModel
     val uiState by viewModel.uiState.collectAsState()
 
-    // Snackbar para feedback
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // 3. Efecto: Navegación al Home en caso de éxito
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            // Navegar al Home y limpiar el historial de Login/Registro
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
             }
@@ -65,7 +70,6 @@ fun RegisterScreen(
         }
     }
 
-    // 4. Efecto: Mostrar errores en Snackbar
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMsg ->
             snackbarHostState.showSnackbar(errorMsg)
@@ -80,52 +84,54 @@ fun RegisterScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()), // Permite scroll en pantallas pequeñas
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Crear Cuenta",
-                style = MaterialTheme.typography.headlineMedium
-            )
+            Text("Crear Cuenta", style = MaterialTheme.typography.headlineMedium)
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Campo Nombre
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text("Nombre Completo") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                isError = uiState.nameError != null,
+                supportingText = { if (uiState.nameError != null) Text(uiState.nameError!!) },
+                trailingIcon = { if (uiState.nameError != null) Icon(Icons.Filled.Warning, "Warning", tint = MaterialTheme.colorScheme.error) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo Email
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                isError = uiState.emailError != null,
+                supportingText = { if (uiState.emailError != null) Text(uiState.emailError!!) },
+                trailingIcon = { if (uiState.emailError != null) Icon(Icons.Filled.Warning, "Warning", tint = MaterialTheme.colorScheme.error) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo Password
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text("Contraseña") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                isError = uiState.passwordError != null,
+                supportingText = { if (uiState.passwordError != null) Text(uiState.passwordError!!) },
+                trailingIcon = { if (uiState.passwordError != null) Icon(Icons.Filled.Warning, "Warning", tint = MaterialTheme.colorScheme.error) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo Confirmar Password
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
@@ -133,32 +139,16 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
-                isError = password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword
+                isError = password != confirmPassword,
+                supportingText = { if (password != confirmPassword) Text("Las contraseñas no coinciden") },
+                trailingIcon = { if (password != confirmPassword) Icon(Icons.Filled.Warning, "Warning", tint = MaterialTheme.colorScheme.error) }
             )
-
-            if (password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword) {
-                Text(
-                    text = "Las contraseñas no coinciden",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.align(Alignment.Start)
-                )
-            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón Registrar
             Button(
-                onClick = {
-                    if (password == confirmPassword) {
-                        viewModel.register(name, email, password)
-                    }
-                },
-                enabled = !uiState.isLoading &&
-                        name.isNotBlank() &&
-                        email.isNotBlank() &&
-                        password.isNotBlank() &&
-                        (password == confirmPassword),
+                onClick = { viewModel.register(name, email, password) },
+                enabled = !uiState.isLoading && password == confirmPassword,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (uiState.isLoading) {
@@ -173,7 +163,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Volver al Login
             TextButton(
                 onClick = { navController.popBackStack() }
             ) {

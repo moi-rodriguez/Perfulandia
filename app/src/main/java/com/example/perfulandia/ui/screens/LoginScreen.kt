@@ -1,7 +1,25 @@
 package com.example.perfulandia.ui.screens
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -21,42 +39,38 @@ import com.example.perfulandia.viewmodel.LoginViewModel
 fun LoginScreen(
     navController: NavController
 ) {
-    // 1. Obtenemos las dependencias desde nuestra clase AppDependencies
     val context = LocalContext.current
     val dependencies = remember { AppDependencies.getInstance(context) }
 
-    // 2. Inyección de dependencias usando ViewModelFactory
     val viewModel: LoginViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
-                // Aquí le decimos: "Cuando quieras un LoginViewModel, créalo ASÍ:"
                 LoginViewModel(dependencies.authRepository)
             }
         }
     )
 
-    // --- UI ---
-
-    // Estados del formulario
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
 
     val uiState by viewModel.uiState.collectAsState()
 
-    // Snackbars
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Efecto de Navegación (Éxito)
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            navController.navigate(Screen.Home.route) {
+            val user = uiState.user
+            val route = when (user?.role) {
+                "ADMIN" -> Screen.AdminDashboard.route
+                else -> Screen.Home.route
+            }
+            navController.navigate(route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
             }
             viewModel.resetState()
         }
     }
 
-    // Efecto de Error
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMsg ->
             snackbarHostState.showSnackbar(errorMsg)
@@ -83,7 +97,18 @@ fun LoginScreen(
                 onValueChange = { email = it },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                isError = uiState.emailError != null,
+                supportingText = {
+                    if (uiState.emailError != null) {
+                        Text(uiState.emailError!!)
+                    }
+                },
+                trailingIcon = {
+                    if (uiState.emailError != null) {
+                        Icon(Icons.Filled.Warning, "Warning", tint = MaterialTheme.colorScheme.error)
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -94,7 +119,18 @@ fun LoginScreen(
                 label = { Text("Contraseña") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                isError = uiState.passwordError != null,
+                supportingText = {
+                    if (uiState.passwordError != null) {
+                        Text(uiState.passwordError!!)
+                    }
+                },
+                trailingIcon = {
+                    if (uiState.passwordError != null) {
+                        Icon(Icons.Filled.Warning, "Warning", tint = MaterialTheme.colorScheme.error)
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -115,6 +151,14 @@ fun LoginScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            TextButton(
+                onClick = { navController.navigate(Screen.ForgotPassword.route) }
+            ) {
+                Text("¿Olvidaste tu contraseña?")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             TextButton(
                 onClick = { navController.navigate(Screen.Register.route) }
