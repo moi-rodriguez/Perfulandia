@@ -21,6 +21,10 @@ import com.example.perfulandia.ui.screens.LoginScreen
 import com.example.perfulandia.ui.screens.RegisterScreen
 import com.example.perfulandia.ui.screens.ProfileScreen
 import com.example.perfulandia.data.local.SessionManager
+import com.example.perfulandia.ui.screens.AdminDashboardScreen
+import com.example.perfulandia.ui.screens.ForgotPasswordScreen
+import com.example.perfulandia.ui.screens.MyOrdersScreen
+import com.example.perfulandia.ui.screens.MyReviewsScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +74,18 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
             composable(route = Screen.Register.route) {
                 RegisterScreen(navController = navController)
+            }
+            composable(route = Screen.AdminDashboard.route) {
+                AdminDashboardScreen(navController = navController)
+            }
+            composable(route = Screen.ForgotPassword.route) {
+                ForgotPasswordScreen(navController = navController)
+            }
+            composable(route = Screen.MyOrders.route) {
+                MyOrdersScreen(navController = navController)
+            }
+            composable(route = Screen.MyReviews.route) {
+                MyReviewsScreen(navController = navController)
             }
         }
     }
