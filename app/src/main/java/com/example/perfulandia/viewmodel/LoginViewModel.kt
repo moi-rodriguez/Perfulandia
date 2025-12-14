@@ -21,6 +21,8 @@ data class LoginUiState(
     val user: User? = null,
     val error: String? = null, // Error general (ej: de API)
     val isSuccess: Boolean = false, // Flag útil para navegación
+    val isAdminLogin: Boolean = false, // Flag para login de admin
+    val isGuestLogin: Boolean = false, // Flag para login de invitado
     val emailError: String? = null,
     val passwordError: String? = null
 )
@@ -34,7 +36,7 @@ class LoginViewModel(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LoginUiState(emailError = null, passwordError = null))
+    private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     fun login(email: String, pass: String) {
@@ -69,11 +71,15 @@ class LoginViewModel(
 
             // 3. Manejo del resultado
             result.onSuccess { user ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    user = user,
-                    isSuccess = true
-                )
+                if (user.role == "ADMIN") {
+                    onAdminLogin()
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        user = user,
+                        isSuccess = true
+                    )
+                }
             }.onFailure { exception ->
                 // El repositorio ya nos da un mensaje amigable (ej. "Credenciales inválidas")
                 _uiState.value = _uiState.value.copy(
@@ -84,10 +90,25 @@ class LoginViewModel(
         }
     }
 
+    private fun onAdminLogin() {
+        _uiState.value = _uiState.value.copy(isAdminLogin = true, isLoading = false)
+    }
+
+    private fun onGuestLogin() {
+        _uiState.value = _uiState.value.copy(isGuestLogin = true)
+    }
+
+    fun loginAsGuest() {
+        viewModelScope.launch {
+            authRepository.logout() // Limpia la sesión
+            onGuestLogin()
+        }
+    }
+
     /**
      * Función para limpiar el estado después de un éxito o error manejado en la UI.
      */
     fun resetState() {
-        _uiState.value = LoginUiState(emailError = null, passwordError = null)
+        _uiState.value = LoginUiState()
     }
 }

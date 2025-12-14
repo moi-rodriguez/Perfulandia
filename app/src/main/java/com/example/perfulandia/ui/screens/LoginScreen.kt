@@ -59,12 +59,25 @@ fun LoginScreen(
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            val user = uiState.user
-            val route = when (user?.role) {
-                "ADMIN" -> Screen.CreatePerfume.route
-                else -> Screen.Home.route
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
             }
-            navController.navigate(route) {
+            viewModel.resetState()
+        }
+    }
+
+    LaunchedEffect(uiState.isAdminLogin) {
+        if (uiState.isAdminLogin) {
+            navController.navigate(Screen.AdminDashboard.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
+            }
+            viewModel.resetState()
+        }
+    }
+
+    LaunchedEffect(uiState.isGuestLogin) {
+        if (uiState.isGuestLogin) {
+            navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
             }
             viewModel.resetState()
@@ -74,6 +87,7 @@ fun LoginScreen(
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMsg ->
             snackbarHostState.showSnackbar(errorMsg)
+            viewModel.resetState() // Limpiar el error después de mostrarlo
         }
     }
 
@@ -148,6 +162,14 @@ fun LoginScreen(
                 } else {
                     Text("Iniciar Sesión")
                 }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextButton(
+                onClick = { viewModel.loginAsGuest() }
+            ) {
+                Text("Entrar como Invitado")
             }
 
             Spacer(modifier = Modifier.height(16.dp))

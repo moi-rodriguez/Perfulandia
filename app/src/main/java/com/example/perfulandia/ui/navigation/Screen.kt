@@ -13,7 +13,12 @@ sealed class Screen(val route: String) {
     data object OrderSuccess : Screen("OrderSuccess")
     data object Profile : Screen("Profile")
     data object MyOrders : Screen("MyOrders")
-    data object CreatePerfume : Screen("CreatePerfume") // SOLO PARA ADMIN
+
+    // Rutas de Admin
+    data object AdminDashboard : Screen("AdminDashboard")
+    data object CreatePerfume : Screen("CreatePerfume")
+    data object ManageUsers : Screen("ManageUsers") //
+    data object ViewReports : Screen("ViewReports") //
 
     // Rutas con argumentos
     data object PerfumeDetail : Screen("PerfumeDetail/{perfumeId}") {
