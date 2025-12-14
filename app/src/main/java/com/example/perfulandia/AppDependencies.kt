@@ -25,11 +25,16 @@ class AppDependencies(context: Context) {
     private val categoryApi by lazy { ApiService.provideCategoryApi(context) }
     private val orderApi by lazy { ApiService.provideOrderApi(context) }
     private val reviewApi by lazy { ApiService.provideReviewApi(context) }
+    private val userApi by lazy { ApiService.provideUserApi(context) } // Added
 
 
     // 3. Repositorios - Se inyectan las APIS correspondientes
     val authRepository: AuthRepository by lazy {
         AuthRepository(authApi, sessionManager)
+    }
+
+    val userRepository: UserRepository by lazy { // Added
+        UserRepository(userApi)
     }
 
     val avatarRepository: AvatarRepository by lazy {
