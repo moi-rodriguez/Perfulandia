@@ -82,7 +82,6 @@ fun PerfumeDetailScreen(
                 }
                 uiState.perfume != null -> {
                     val perfume = uiState.perfume!!
-                    val baseURL = "https://perfulandia-api-ww2w.onrender.com/"
 
                     Column(
                         modifier = Modifier
@@ -96,7 +95,7 @@ fun PerfumeDetailScreen(
                         ) {
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
-                                    .data(baseURL + perfume.getImageUrl())
+                                    .data(perfume.getImageUrl())
                                     .crossfade(true)
                                     .build(),
                                 contentDescription = perfume.nombre,

@@ -137,8 +137,6 @@ fun HomeScreen(
 // PERFUME CARD
 @Composable
 fun PerfumeCard(perfume: Perfume, onClick: (String) -> Unit) {
-    val baseURL = "https://perfulandia-api-ww2w.onrender.com/"
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -151,7 +149,7 @@ fun PerfumeCard(perfume: Perfume, onClick: (String) -> Unit) {
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data((baseURL + perfume.getImageUrl()))
+                    .data(perfume.getImageUrl())
                     .crossfade(true)
                     .build(),
                 contentDescription = perfume.nombre,
