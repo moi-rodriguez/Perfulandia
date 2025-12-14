@@ -6,7 +6,7 @@ import com.example.perfulandia.data.remote.ApiService
 import com.example.perfulandia.data.repository.*
 
 /**
- * Contenedor de Dependencias (Service Locator).
+ * Service Locator: Contenedor de todas las dependencias de la app
  * Inicializa y mantiene las instancias únicas (Singletons) de los repositorios y APIs.
  */
 class AppDependencies(context: Context) {
@@ -16,11 +16,15 @@ class AppDependencies(context: Context) {
         SessionManager(context)
     }
 
-    // 2. APIs (Retrofit)
+    // 2. APIs (Retrofit) - Obtenemos las instancias desde ApiService
     private val authApi by lazy { ApiService.provideAuthApi(context) }
     private val perfumeApi by lazy { ApiService.providePerfumeApi(context) }
+    private val categoryApi by lazy { ApiService.provideCategoryApi(context) }
+    private val orderApi by lazy { ApiService.provideOrderApi(context) }
+    private val reviewApi by lazy { ApiService.provideReviewApi(context) }
 
-    // 3. Repositorios
+
+    // 3. Repositorios - Se inyectan las APIS correspondientes
     val authRepository: AuthRepository by lazy {
         AuthRepository(authApi, sessionManager)
     }
@@ -31,6 +35,18 @@ class AppDependencies(context: Context) {
 
     val perfumeRepository: PerfumeRepository by lazy {
         PerfumeRepository(perfumeApi)
+    }
+
+    val categoryRepository: CategoryRepository by lazy {
+        CategoryRepository(categoryApi)
+    }
+
+    val orderRepository: OrderRepository by lazy {
+        OrderRepository(orderApi)
+    }
+
+    val reviewRepository: ReviewRepository by lazy {
+        ReviewRepository(reviewApi)
     }
 
     companion object {

@@ -2,22 +2,14 @@ package com.example.perfulandia.data.remote
 
 import android.content.Context
 import com.example.perfulandia.data.remote.api.AuthApi
+import com.example.perfulandia.data.remote.api.CategoryApi
+import com.example.perfulandia.data.remote.api.OrderApi
 import com.example.perfulandia.data.remote.api.PerfumeApi
+import com.example.perfulandia.data.remote.api.ReviewApi
 import retrofit2.Retrofit
 
 /**
  * ApiService: Singleton que proporciona todas las interfaces API
- *
- * Centraliza la creación de servicios Retrofit para:
- * - AuthApi (autenticación y usuarios)
- * - PerfumeApi (CRUD de perfumes)
- *
- * Uso en Repositories:
- * ```
- * class PerfumeRepository(context: Context) {
- *     private val api = ApiService.providePerfumeApi(context)
- * }
- * ```
  */
 object ApiService {
 
@@ -35,29 +27,24 @@ object ApiService {
         return retrofit!!
     }
 
-    // ============================================
-    // APIs - Proporcionan las interfaces de Retrofit
-    // ============================================
-
-    /**
-     * AuthApi: Autenticación y gestión de usuarios
-     *
-     * Endpoints:
-     * - POST /auth/login
-     * - POST /auth/register
-     * - GET /auth/profile
-     */
     fun provideAuthApi(context: Context): AuthApi {
         return getRetrofit(context).create(AuthApi::class.java)
     }
 
-    /**
-     * PerfumeApi: CRUD de perfumes
-     *
-     * Endpoints:
-     * - GET /perfume
-     */
     fun providePerfumeApi(context: Context): PerfumeApi {
         return getRetrofit(context).create(PerfumeApi::class.java)
+    }
+
+    // NUEVAS APIS
+    fun provideCategoryApi(context: Context): CategoryApi {
+        return getRetrofit(context).create(CategoryApi::class.java)
+    }
+
+    fun provideOrderApi(context: Context): OrderApi {
+        return getRetrofit(context).create(OrderApi::class.java)
+    }
+
+    fun provideReviewApi(context: Context): ReviewApi {
+        return getRetrofit(context).create(ReviewApi::class.java)
     }
 }
