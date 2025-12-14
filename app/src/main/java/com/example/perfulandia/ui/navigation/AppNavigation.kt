@@ -32,6 +32,7 @@ import com.example.perfulandia.ui.screens.PerfumeDetailScreen
 import com.example.perfulandia.AppDependencies
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.perfulandia.viewmodel.HomeViewModel
+import com.example.perfulandia.viewmodel.PerfumeDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,7 +110,14 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             // Rutas con Argumentos
             composable(route = Screen.PerfumeDetail.route) { backStackEntry ->
                 val perfumeId = backStackEntry.arguments?.getString("perfumeId")
-                PerfumeDetailScreen(navController = navController, perfumeId = perfumeId)
+                if (perfumeId != null) {
+                    val perfumeDetailViewModel: PerfumeDetailViewModel = viewModel(factory = appDependencies.perfumeDetailViewModelFactory)
+                    PerfumeDetailScreen(
+                        navController = navController,
+                        perfumeId = perfumeId,
+                        viewModel = perfumeDetailViewModel
+                    )
+                }
             }
 
             composable(route = Screen.CreateReview.route) { backStackEntry ->
