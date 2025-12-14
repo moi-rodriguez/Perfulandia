@@ -5,7 +5,9 @@ import com.example.perfulandia.data.local.SessionManager
 import com.example.perfulandia.data.remote.ApiService
 import com.example.perfulandia.data.repository.*
 import com.example.perfulandia.viewmodel.CartViewModel
+import com.example.perfulandia.viewmodel.CreateReviewViewModelFactory
 import com.example.perfulandia.viewmodel.HomeViewModelFactory
+import com.example.perfulandia.viewmodel.OrderViewModelFactory
 import com.example.perfulandia.viewmodel.PerfumeDetailViewModelFactory
 
 /**
@@ -25,16 +27,11 @@ class AppDependencies(context: Context) {
     private val categoryApi by lazy { ApiService.provideCategoryApi(context) }
     private val orderApi by lazy { ApiService.provideOrderApi(context) }
     private val reviewApi by lazy { ApiService.provideReviewApi(context) }
-    private val userApi by lazy { ApiService.provideUserApi(context) } // Added
 
 
     // 3. Repositorios - Se inyectan las APIS correspondientes
     val authRepository: AuthRepository by lazy {
         AuthRepository(authApi, sessionManager)
-    }
-
-    val userRepository: UserRepository by lazy { // Added
-        UserRepository(userApi)
     }
 
     val avatarRepository: AvatarRepository by lazy {
@@ -71,6 +68,14 @@ class AppDependencies(context: Context) {
 
     val perfumeDetailViewModelFactory: PerfumeDetailViewModelFactory by lazy {
         PerfumeDetailViewModelFactory(perfumeRepository, sessionManager, cartViewModel)
+    }
+
+    val orderViewModelFactory: OrderViewModelFactory by lazy {
+        OrderViewModelFactory(orderRepository)
+    }
+
+    val createReviewViewModelFactory: CreateReviewViewModelFactory by lazy {
+        CreateReviewViewModelFactory(reviewRepository)
     }
 
     companion object {
