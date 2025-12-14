@@ -84,6 +84,19 @@ class LoginViewModel(
         }
     }
 
+    fun loginAsGuest() {
+        viewModelScope.launch {
+            authRepository.logout() // Limpia la sesión
+            // Navega a Home. Esto se gestionará en la vista observando un estado.
+            // Para mantenerlo simple, podrías usar el mismo 'isSuccess'
+            // o un nuevo flag si quieres ser más explícito.
+            _uiState.value = _uiState.value.copy(
+                isSuccess = true,
+                user = null // Asegúrate de que no haya datos de usuario
+            )
+        }
+    }
+
     /**
      * Función para limpiar el estado después de un éxito o error manejado en la UI.
      */

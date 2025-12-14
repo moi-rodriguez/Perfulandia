@@ -153,6 +153,14 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(
+                onClick = { viewModel.loginAsGuest() }
+            ) {
+                Text("Entrar como Invitado")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextButton(
                 onClick = { navController.navigate(Screen.ForgotPassword.route) }
             ) {
                 Text("¿Olvidaste tu contraseña?")
