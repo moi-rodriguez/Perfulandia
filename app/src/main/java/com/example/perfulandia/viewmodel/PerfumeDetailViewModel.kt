@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.perfulandia.data.local.SessionManager
 import com.example.perfulandia.data.repository.PerfumeRepository
+import com.example.perfulandia.data.repository.ReviewRepository
 import com.example.perfulandia.model.Perfume
+import com.example.perfulandia.model.Review
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +19,7 @@ import kotlinx.coroutines.launch
 data class PerfumeDetailUiState(
     val isLoading: Boolean = false,
     val perfume: Perfume? = null,
+    val reviews: List<Review> = emptyList(), // Lista de reseñas
     val error: String? = null,
     val navigateToLogin: Boolean = false, // Evento para navegar al login
     val showAddedToCartMessage: Boolean = false // Evento para mostrar mensaje
@@ -24,6 +27,7 @@ data class PerfumeDetailUiState(
 
 class PerfumeDetailViewModel(
     private val perfumeRepository: PerfumeRepository,
+    private val reviewRepository: ReviewRepository, // Inyectado
     private val sessionManager: SessionManager,
     private val cartViewModel: CartViewModel
 ) : ViewModel() {
@@ -32,28 +36,31 @@ class PerfumeDetailViewModel(
     val uiState: StateFlow<PerfumeDetailUiState> = _uiState.asStateFlow()
 
     /**
-     * Carga los detalles de un perfume específico por su ID.
+     * Carga los detalles de un perfume específico y sus reseñas.
      */
     fun loadPerfume(perfumeId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            val result = perfumeRepository.getPerfumeById(perfumeId)
-
-            result.onSuccess { perfume ->
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        perfume = perfume
-                    )
-                }
+            // Cargar detalles del perfume
+            val perfumeResult = perfumeRepository.getPerfumeById(perfumeId)
+            perfumeResult.onSuccess { perfume ->
+                _uiState.update { it.copy(perfume = perfume) }
             }.onFailure { error ->
                 _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = "Error al cargar el perfume: ${error.message}"
-                    )
+                    it.copy(isLoading = false, error = "Error al cargar el perfume: ${error.message}")
                 }
+                return@launch // Salir si el perfume falla
+            }
+
+            // Cargar reseñas del perfume
+            val reviewsResult = reviewRepository.getReviewsByPerfumeId(perfumeId)
+            reviewsResult.onSuccess { reviews ->
+                _uiState.update { it.copy(isLoading = false, reviews = reviews) }
+            }.onFailure { error ->
+                // No tratar la falla de reseñas como un error fatal, solo mostrar el perfume
+                _uiState.update { it.copy(isLoading = false) }
+                // Opcionalmente, se podría registrar el error
             }
         }
     }

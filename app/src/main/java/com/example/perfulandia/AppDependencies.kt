@@ -66,8 +66,8 @@ class AppDependencies(context: Context) {
         HomeViewModelFactory(perfumeRepository, categoryRepository)
     }
 
-    val perfumeDetailViewModelFactory: PerfumeDetailViewModelFactory by lazy {
-        PerfumeDetailViewModelFactory(perfumeRepository, sessionManager, cartViewModel)
+    val perfumeDetailViewModelFactory by lazy {
+        PerfumeDetailViewModelFactory(perfumeRepository, reviewRepository, sessionManager, cartViewModel)
     }
 
     val orderViewModelFactory: OrderViewModelFactory by lazy {

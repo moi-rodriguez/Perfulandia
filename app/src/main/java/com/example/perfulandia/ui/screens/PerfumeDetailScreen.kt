@@ -15,6 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.perfulandia.ui.navigation.Screen
@@ -29,10 +31,20 @@ fun PerfumeDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
-    // Cargar el perfume cuando la pantalla se muestra por primera vez
-    LaunchedEffect(perfumeId) {
-        viewModel.loadPerfume(perfumeId)
+    // Recargar datos cada vez que la pantalla se reanuda
+    DisposableEffect(lifecycleOwner, perfumeId) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadPerfume(perfumeId)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     // Observar el evento de navegación al login
@@ -165,6 +177,55 @@ fun PerfumeDetailScreen(
                                 .height(50.dp)
                         ) {
                             Text("Agregar al Carrito", fontSize = 16.sp)
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // --- Sección de Reseñas ---
+                        Text(
+                            text = "Reseñas",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        if (uiState.reviews.isNotEmpty()) {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                uiState.reviews.forEach { review ->
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        elevation = CardDefaults.cardElevation(2.dp)
+                                    ) {
+                                        Column(modifier = Modifier.padding(16.dp)) {
+                                            // Aquí podrías mostrar estrellas basadas en review.calificacion
+                                            Text(
+                                                text = "Calificación: ${review.calificacion} / 5",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = review.comentario,
+                                                style = MaterialTheme.typography.bodyLarge
+                                            )
+                                            // Opcional: Nombre del autor
+                                         Spacer(modifier = Modifier.height(8.dp))
+                                         Text(
+                                             text = "- ${review.autor}",
+                                             style = MaterialTheme.typography.bodySmall,
+                                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                                         )
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+
+                            Text(
+                                text = "Todavía no hay reseñas para este perfume.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }
