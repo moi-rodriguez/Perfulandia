@@ -30,11 +30,16 @@ import com.example.perfulandia.ui.screens.MyOrdersScreen
 import com.example.perfulandia.ui.screens.OrderSuccessScreen
 import com.example.perfulandia.ui.screens.PerfumeDetailScreen
 
+import com.example.perfulandia.AppDependencies
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.perfulandia.viewmodel.HomeViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val context = LocalContext.current
+    val appDependencies = remember { AppDependencies.getInstance(context) }
 
     // Estado para controlar la pantalla de inicio
     var startDestination by remember { mutableStateOf(Screen.Login.route) }
@@ -71,7 +76,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 LoginScreen(navController = navController)
             }
             composable(route = Screen.Home.route) {
-                HomeScreen(navController = navController)
+                val homeViewModel: HomeViewModel = viewModel(factory = appDependencies.homeViewModelFactory)
+                HomeScreen(navController = navController, viewModel = homeViewModel)
             }
             composable(route = Screen.Profile.route) {
                 ProfileScreen(navController = navController)

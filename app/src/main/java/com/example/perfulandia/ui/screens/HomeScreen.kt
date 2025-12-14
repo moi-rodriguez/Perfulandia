@@ -20,12 +20,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.perfulandia.AppDependencies
 import com.example.perfulandia.model.Perfume
 import com.example.perfulandia.ui.navigation.Screen
 import com.example.perfulandia.viewmodel.HomeViewModel
@@ -33,20 +29,13 @@ import com.example.perfulandia.viewmodel.HomeViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    navController: NavController
+    navController: NavController,
+    // El ViewModel se recibe como parámetro, lo que permite que sea inyectado desde
+    // el Composable padre (AppNavigation) utilizando la HomeViewModelFactory.
+    // Esto asegura que el ViewModel se crea y gestiona correctamente por el sistema Android,
+    // con sus dependencias resueltas, y que sobrevive a los cambios de configuración.
+    viewModel: HomeViewModel
 ) {
-
-    // 1. Inyección del ViewModel (igual que en Login/Register)
-    val context = LocalContext.current
-    val dependencies = remember { AppDependencies.getInstance(context) }
-
-    val viewModel: HomeViewModel = viewModel(
-        factory = viewModelFactory {
-            initializer {
-                HomeViewModel(dependencies.perfumeRepository)
-            }
-        }
-    )
 
     // 2. Observamos el estado del ViewModel
     val uiState by viewModel.uiState.collectAsState()
@@ -99,20 +88,18 @@ fun HomeScreen(
                 .fillMaxWidth()
         ) {
 
-            // --- FILTROS POR GÉNERO ---
-            // usamos el estado del ViewModel y su función filterByGenero
+            // --- FILTROS POR CATEGORÍA ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                val generos = listOf("Todos", "hombre", "mujer", "unisex")
-                generos.forEach { genero ->
+                uiState.categories.forEach { category ->
                     FilterChip(
-                        selected = uiState.selectedGenero == genero,
-                        onClick = { viewModel.filterByGenero(genero) },
-                        label = { Text(genero) }
+                        selected = uiState.selectedCategory == category.nombre,
+                        onClick = { viewModel.filterByCategory(category.nombre) },
+                        label = { Text(category.nombre) }
                     )
                 }
             }
@@ -131,8 +118,8 @@ fun HomeScreen(
                 ) {
                     // Usamos uiState.perfumes (la lista ya filtrada por el VM)
                     items(uiState.perfumes) { perfume ->
-                        PerfumeCard(perfume = perfume) {
-                            // Acción click
+                        PerfumeCard(perfume = perfume) { perfumeId ->
+                            navController.navigate(Screen.PerfumeDetail.createRoute(perfumeId))
                         }
                     }
                 }
@@ -143,13 +130,13 @@ fun HomeScreen(
 
 // PERFUME CARD
 @Composable
-fun PerfumeCard(perfume: Perfume, onClick: () -> Unit) {
+fun PerfumeCard(perfume: Perfume, onClick: (String) -> Unit) {
     val baseURL = "https://perfulandia-api-ww2w.onrender.com/"
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable { onClick(perfume.id) },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(

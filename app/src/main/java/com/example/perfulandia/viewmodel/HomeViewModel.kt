@@ -2,7 +2,9 @@ package com.example.perfulandia.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.perfulandia.data.repository.CategoryRepository
 import com.example.perfulandia.data.repository.PerfumeRepository
+import com.example.perfulandia.model.Category
 import com.example.perfulandia.model.Perfume
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,46 +16,64 @@ data class HomeUiState(
     val isLoading: Boolean = false,
     val perfumes: List<Perfume> = emptyList(),      // Lista filtrada que ve el usuario
     val allPerfumes: List<Perfume> = emptyList(),   // Copia de respaldo para resetear filtros
-    val selectedGenero: String = "Todos",
+    val categories: List<Category> = emptyList(),   // Lista de categorías para filtros
+    val selectedCategory: String = "Todos",
     val error: String? = null
 )
 
 class HomeViewModel(
-    private val perfumeRepository: PerfumeRepository
+    private val perfumeRepository: PerfumeRepository,
+    private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        loadPerfumes()
+        loadData() // Llamamos a una función general para cargar toodo lo necesario
     }
 
     /**
-     * Carga la lista de perfumes.
+     * Carga tanto perfumes como categorías.
      */
-    fun loadPerfumes() {
-
+    fun loadData() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            val result = perfumeRepository.getAllPerfumes()
+            // Cargar perfumes
+            val perfumeResult = perfumeRepository.getAllPerfumes()
+            perfumeResult.onSuccess { perfumesList ->
+                _uiState.update {
+                    it.copy(
+                        allPerfumes = perfumesList,
+                        perfumes = perfumesList
+                    )
+                }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        error = "Error al cargar perfumes: ${error.message}",
+                        allPerfumes = emptyList(),
+                        perfumes = emptyList()
+                    )
+                }
+            }
 
-            result.onSuccess { listaReal ->
+            // Cargar categorías
+            val categoryResult = categoryRepository.getAllCategories()
+            categoryResult.onSuccess { categoriesList ->
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        allPerfumes = listaReal,
-                        perfumes = listaReal
+                        categories = listOf(Category(id = "Todos", nombre = "Todos")) + categoriesList // Añadir "Todos" como opción
                     )
                 }
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = "Error de conexión: ${error.message}",
-                        allPerfumes = emptyList(),
-                        perfumes = emptyList()
+                        error = "Error al cargar categorías: ${error.message}",
+                        categories = listOf(Category(id = "Todos", nombre = "Todos"))
                     )
                 }
             }
@@ -61,16 +81,16 @@ class HomeViewModel(
     }
 
     /**
-     * Filtro de gènero
+     * Filtro por categoría
      */
-    fun filterByGenero(genero: String) {
+    fun filterByCategory(categoryName: String) {
         _uiState.update { current ->
-            val filteredList = if (genero == "Todos") {
+            val filteredList = if (categoryName == "Todos") {
                 current.allPerfumes
             } else {
-                current.allPerfumes.filter { it.genero == genero }
+                current.allPerfumes.filter { it.categoriaId == categoryName } // Asumiendo que categoriaId es el nombre o un ID único
             }
-            current.copy(selectedGenero = genero, perfumes = filteredList)
+            current.copy(selectedCategory = categoryName, perfumes = filteredList)
         }
     }
 }
