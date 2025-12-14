@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.perfulandia.data.local.SessionManager
 import com.example.perfulandia.data.remote.ApiService
 import com.example.perfulandia.data.repository.*
+import com.example.perfulandia.viewmodel.HomeViewModelFactory
 
 /**
  * Service Locator: Contenedor de todas las dependencias de la app
@@ -47,6 +48,14 @@ class AppDependencies(context: Context) {
 
     val reviewRepository: ReviewRepository by lazy {
         ReviewRepository(reviewApi)
+    }
+
+    // 4. ViewModels (Factory Providers)
+    // Se proporcionan las fábricas para los ViewModels que tienen dependencias en su constructor.
+    // Esto es parte del patrón de inyección manual de dependencias (Service Locator)
+    // para asegurar que los ViewModels se construyan correctamente y sus ciclos de vida sean manejados por Android.
+    val homeViewModelFactory: HomeViewModelFactory by lazy {
+        HomeViewModelFactory(perfumeRepository, categoryRepository)
     }
 
     companion object {
