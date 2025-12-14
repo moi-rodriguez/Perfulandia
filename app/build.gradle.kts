@@ -64,6 +64,8 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.10.00"))
     implementation("androidx.compose.material3:material3-window-size-class:1.3.1")
     implementation("androidx.compose.runtime:runtime")
+    // Material Icons Extended para iconos adicionales como Outlined.StarOutline
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
     // OkHttp - Cliente HTTP
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")

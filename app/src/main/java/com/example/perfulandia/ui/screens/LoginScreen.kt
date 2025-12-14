@@ -68,7 +68,7 @@ fun LoginScreen(
 
     LaunchedEffect(uiState.isAdminLogin) {
         if (uiState.isAdminLogin) {
-            navController.navigate(Screen.AdminDashboard.route) {
+            navController.navigate(Screen.CreatePerfume.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
             }
             viewModel.resetState()
