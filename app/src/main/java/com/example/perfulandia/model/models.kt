@@ -36,6 +36,35 @@ data class Perfume(
 }
 
 /**
+ * Modelo de dominio para Category
+ */
+data class Category(
+    val id: String,
+    val nombre: String,
+    val imagen: String? = null
+)
+
+/**
+ * Modelo de dominio para Order (Pedido)
+ */
+data class Order(
+    val id: String,
+    val fecha: String,
+    val total: Double,
+    val perfumes: List<Perfume> // O un modelo más simple si es necesario
+)
+
+/**
+ * Modelo de dominio para Review (Reseña)
+ */
+data class Review(
+    val id: String,
+    val calificacion: Int,
+    val comentario: String,
+    val autor: String // Nombre del usuario
+)
+
+/**
  * Clase sellada para representar el estado de operaciones asíncronas en la UI (Carga, Éxito, Error)
  */
 sealed class Resource<T>(
