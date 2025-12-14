@@ -22,34 +22,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavController
-import com.example.perfulandia.AppDependencies
 import com.example.perfulandia.model.Order
 import com.example.perfulandia.model.Perfume
 import com.example.perfulandia.ui.navigation.Screen
 import com.example.perfulandia.viewmodel.OrderViewModel
 
 @Composable
-fun MyOrdersScreen(navController: NavController) {
-    val context = LocalContext.current
-    val dependencies = remember { AppDependencies.getInstance(context) }
-    val viewModel: OrderViewModel = viewModel(
-        factory = viewModelFactory {
-            initializer {
-                OrderViewModel(dependencies.orderRepository)
-            }
-        }
-    )
-
+fun MyOrdersScreen(
+    navController: NavController,
+    viewModel: OrderViewModel
+) {
     LaunchedEffect(Unit) {
         viewModel.loadMyOrders()
     }
