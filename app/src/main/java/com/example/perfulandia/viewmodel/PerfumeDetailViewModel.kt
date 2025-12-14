@@ -18,13 +18,14 @@ data class PerfumeDetailUiState(
     val isLoading: Boolean = false,
     val perfume: Perfume? = null,
     val error: String? = null,
-    val navigateToLogin: Boolean = false // Evento para navegar al login
+    val navigateToLogin: Boolean = false, // Evento para navegar al login
+    val showAddedToCartMessage: Boolean = false // Evento para mostrar mensaje
 )
 
 class PerfumeDetailViewModel(
     private val perfumeRepository: PerfumeRepository,
     private val sessionManager: SessionManager,
-    // private val cartViewModel: CartViewModel // Se necesitará más adelante
+    private val cartViewModel: CartViewModel
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PerfumeDetailUiState())
@@ -37,10 +38,7 @@ class PerfumeDetailViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            // Buscamos el perfume en el repositorio que ya tiene la lista
-            // Esto es más eficiente que hacer otra llamada a la API si ya tenemos los datos.
-            // Si no, se haría una llamada a `perfumeRepository.getPerfumeById(perfumeId)`
-            val result = perfumeRepository.getPerfumeById(perfumeId) // Asumiendo que esta función existe
+            val result = perfumeRepository.getPerfumeById(perfumeId)
 
             result.onSuccess { perfume ->
                 _uiState.update {
@@ -71,8 +69,11 @@ class PerfumeDetailViewModel(
                 _uiState.update { it.copy(navigateToLogin = true) }
             } else {
                 // Usuario es cliente, agregar al carrito
-                // TODO: Llamar a la función del CartViewModel para agregar el item.
-                // cartViewModel.addToCart(uiState.value.perfume)
+                uiState.value.perfume?.let { perfume ->
+                    cartViewModel.addToCart(perfume)
+                    // Activar el mensaje de confirmación
+                    _uiState.update { it.copy(showAddedToCartMessage = true) }
+                }
             }
         }
     }
@@ -82,5 +83,12 @@ class PerfumeDetailViewModel(
      */
     fun onNavigationHandled() {
         _uiState.update { it.copy(navigateToLogin = false) }
+    }
+
+    /**
+     * Resetea el evento de mensaje para que no se muestre múltiples veces.
+     */
+    fun onMessageShown() {
+        _uiState.update { it.copy(showAddedToCartMessage = false) }
     }
 }

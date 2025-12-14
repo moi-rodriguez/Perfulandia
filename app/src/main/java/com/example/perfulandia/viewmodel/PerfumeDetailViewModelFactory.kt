@@ -13,12 +13,13 @@ import com.example.perfulandia.data.repository.PerfumeRepository
  */
 class PerfumeDetailViewModelFactory(
     private val perfumeRepository: PerfumeRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val cartViewModel: CartViewModel
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(PerfumeDetailViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return PerfumeDetailViewModel(perfumeRepository, sessionManager) as T
+            return PerfumeDetailViewModel(perfumeRepository, sessionManager, cartViewModel) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

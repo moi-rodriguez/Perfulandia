@@ -28,6 +28,7 @@ fun PerfumeDetailScreen(
     viewModel: PerfumeDetailViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Cargar el perfume cuando la pantalla se muestra por primera vez
     LaunchedEffect(perfumeId) {
@@ -42,7 +43,16 @@ fun PerfumeDetailScreen(
         }
     }
 
+    // Observar el evento para mostrar el Snackbar
+    LaunchedEffect(uiState.showAddedToCartMessage) {
+        if (uiState.showAddedToCartMessage) {
+            snackbarHostState.showSnackbar("Añadido al carrito")
+            viewModel.onMessageShown() // Resetear el evento
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(uiState.perfume?.nombre ?: "Detalle") },

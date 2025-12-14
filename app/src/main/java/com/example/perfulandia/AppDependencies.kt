@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.perfulandia.data.local.SessionManager
 import com.example.perfulandia.data.remote.ApiService
 import com.example.perfulandia.data.repository.*
+import com.example.perfulandia.viewmodel.CartViewModel
 import com.example.perfulandia.viewmodel.HomeViewModelFactory
 import com.example.perfulandia.viewmodel.PerfumeDetailViewModelFactory
 
@@ -51,18 +52,20 @@ class AppDependencies(context: Context) {
         ReviewRepository(reviewApi)
     }
 
-    /*
-    4. ViewModels (Factory Providers)
-    Se proporcionan las fábricas para los ViewModels que tienen dependencias en su constructor.
-    Esto es parte del patrón de inyección manual de dependencias (Service Locator)
-    para asegurar que los ViewModels se construyan correctamente y sus ciclos de vida sean manejados por Android.
-     */
+    // 4. ViewModels
+    // Se crea una instancia única (singleton) de CartViewModel para que el estado del
+    // carrito se comparta entre todas las pantallas que lo necesiten (Detail, Cart, etc.).
+    val cartViewModel: CartViewModel by lazy {
+        CartViewModel()
+    }
+
+    // Se proporcionan las fábricas para los ViewModels que tienen dependencias.
     val homeViewModelFactory: HomeViewModelFactory by lazy {
         HomeViewModelFactory(perfumeRepository, categoryRepository)
     }
 
     val perfumeDetailViewModelFactory: PerfumeDetailViewModelFactory by lazy {
-        PerfumeDetailViewModelFactory(perfumeRepository, sessionManager)
+        PerfumeDetailViewModelFactory(perfumeRepository, sessionManager, cartViewModel)
     }
 
     companion object {
