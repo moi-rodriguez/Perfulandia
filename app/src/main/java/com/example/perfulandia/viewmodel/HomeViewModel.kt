@@ -29,10 +29,6 @@ class HomeViewModel(
     private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    init {
-        loadData() // Llamamos a una función general para cargar toodo lo necesario
-    }
-
     /**
      * Carga tanto perfumes como categorías.
      */

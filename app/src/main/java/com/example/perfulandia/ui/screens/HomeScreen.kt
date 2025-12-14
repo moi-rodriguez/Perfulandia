@@ -40,6 +40,12 @@ fun HomeScreen(
     // 2. Observamos el estado del ViewModel
     val uiState by viewModel.uiState.collectAsState()
 
+    // Lanzamos la carga de datos solo una vez cuando el Composable entra en la composición
+    LaunchedEffect(key1 = Unit) {
+        viewModel.loadData()
+    }
+
+
     // Navegación Inferior
     val items = listOf(Screen.Home, Screen.Profile)
     var selectedItem by remember { mutableIntStateOf(0) }
