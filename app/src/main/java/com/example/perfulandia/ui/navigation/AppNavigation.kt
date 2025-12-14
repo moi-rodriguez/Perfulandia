@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.perfulandia.ui.screens.AdminDashboardScreen
 import com.example.perfulandia.ui.screens.HomeScreen
 import com.example.perfulandia.ui.screens.LoginScreen
 import com.example.perfulandia.ui.screens.RegisterScreen
@@ -96,6 +97,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
 
             // Admin
+            composable(route = Screen.AdminDashboard.route) { // Ruta añadida
+                AdminDashboardScreen(navController = navController)
+            }
             composable(route = Screen.CreatePerfume.route) {
                 CreatePerfumeScreen(navController = navController)
             }
