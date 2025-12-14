@@ -126,6 +126,25 @@ fun PerfumeDetailScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // Sección de Especificaciones
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            perfume.marca?.let {
+                                Text("Marca: $it", style = MaterialTheme.typography.bodyLarge)
+                            }
+                            perfume.categoriaId?.let {
+                                Text("Categoría: $it", style = MaterialTheme.typography.bodyLarge)
+                            }
+                            perfume.genero?.let {
+                                Text("Género: $it", style = MaterialTheme.typography.bodyLarge)
+                            }
+                            perfume.tamano?.let {
+                                Text("Tamaño: ${it}ml", style = MaterialTheme.typography.bodyLarge)
+                            }
+                            Text("Stock: ${perfume.stock}", style = MaterialTheme.typography.bodyLarge)
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
                         Text(
                             text = "Descripción",
                             style = MaterialTheme.typography.titleMedium,

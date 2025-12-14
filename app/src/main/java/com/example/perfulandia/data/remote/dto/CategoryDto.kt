@@ -28,6 +28,7 @@ data class CategoryDto(
 )
 
 /**
+ *
  * Respuesta la listar categorias
  */
 data class CategoriesResponse(

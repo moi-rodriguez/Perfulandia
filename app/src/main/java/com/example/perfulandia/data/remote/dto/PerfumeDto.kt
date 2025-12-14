@@ -31,7 +31,7 @@ data class PerfumeDto(
     val stock: Int? = null,
 
     @SerializedName("categoria")
-    val categoria: String? = null,
+    val categoria: Any? = null,
 
     @SerializedName("descripcion")
     val descripcion: String? = null,
