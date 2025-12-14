@@ -6,6 +6,7 @@ import com.example.perfulandia.data.remote.api.CategoryApi
 import com.example.perfulandia.data.remote.api.OrderApi
 import com.example.perfulandia.data.remote.api.PerfumeApi
 import com.example.perfulandia.data.remote.api.ReviewApi
+import com.example.perfulandia.data.remote.api.UserApi
 import retrofit2.Retrofit
 
 /**
@@ -33,6 +34,10 @@ object ApiService {
 
     fun providePerfumeApi(context: Context): PerfumeApi {
         return getRetrofit(context).create(PerfumeApi::class.java)
+    }
+
+    fun provideUserApi(context: Context): UserApi { // Added
+        return getRetrofit(context).create(UserApi::class.java)
     }
 
     // NUEVAS APIS
