@@ -21,15 +21,27 @@ object PerfumeMapper {
      * @return Perfume modelo de dominio
      */
     fun fromDto(dto: PerfumeDto): Perfume {
-        // Extraer el nombre de la categoría de forma segura, sea un String o un Objeto (Map)
-        val categoriaNombre = when (dto.categoria) {
-            is String -> dto.categoria
-            is Map<*, *> -> dto.categoria["nombre"] as? String
-            else -> null
+        // Lógica para extraer ID y Nombre de la categoría
+        val categoriaId: String?
+        val categoriaNombre: String?
+
+        when (dto.categoria) {
+            is String -> {
+                categoriaId = dto.categoria
+                categoriaNombre = null // No tenemos el nombre si solo viene el ID
+            }
+            is Map<*, *> -> {
+                categoriaId = dto.categoria["_id"] as? String
+                categoriaNombre = dto.categoria["nombre"] as? String
+            }
+            else -> {
+                categoriaId = null
+                categoriaNombre = null
+            }
         }
 
         return Perfume(
-            id = dto._id ?: "", // MongoDB usa _id, lo convierte a id
+            id = dto._id ?: "",
             nombre = dto.nombre,
             marca = dto.marca,
             fragancia = dto.fragancia,
@@ -37,7 +49,8 @@ object PerfumeMapper {
             genero = dto.genero,
             precio = dto.precio ?: 0.0,
             stock = dto.stock ?: 0,
-            categoriaId = categoriaNombre,
+            categoriaId = categoriaId,
+            categoriaNombre = categoriaNombre,
             descripcion = dto.descripcion,
             imagen = dto.imagen,
             imagenThumbnail = dto.imagenThumbnail,

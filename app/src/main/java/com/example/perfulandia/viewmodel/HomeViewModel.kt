@@ -84,7 +84,10 @@ class HomeViewModel(
             val filteredList = if (categoryName == "Todos") {
                 current.allPerfumes
             } else {
-                current.allPerfumes.filter { it.categoriaId == categoryName } // Asumiendo que categoriaId es el nombre o un ID único
+                // Buscar el ID de la categoría seleccionada
+                val selectedCategoryId = current.categories.find { it.nombre == categoryName }?.id
+                // Filtrar la lista de perfumes por el ID encontrado
+                current.allPerfumes.filter { it.categoriaId == selectedCategoryId }
             }
             current.copy(selectedCategory = categoryName, perfumes = filteredList)
         }

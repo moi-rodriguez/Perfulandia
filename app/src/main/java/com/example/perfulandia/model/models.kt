@@ -27,6 +27,7 @@ data class Perfume(
     val precio: Double = 0.0,
     val stock: Int = 0,
     val categoriaId: String? = null,
+    val categoriaNombre: String? = null,
     val descripcion: String? = null,
     val imagen: String? = null,
     val imagenThumbnail: String? = null

@@ -131,7 +131,7 @@ fun PerfumeDetailScreen(
                             perfume.marca?.let {
                                 Text("Marca: $it", style = MaterialTheme.typography.bodyLarge)
                             }
-                            perfume.categoriaId?.let {
+                            perfume.categoriaNombre?.let {
                                 Text("Categoría: $it", style = MaterialTheme.typography.bodyLarge)
                             }
                             perfume.genero?.let {
