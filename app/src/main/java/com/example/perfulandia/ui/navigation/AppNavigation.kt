@@ -16,7 +16,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.perfulandia.ui.screens.AdminDashboardScreen
 import com.example.perfulandia.ui.screens.HomeScreen
 import com.example.perfulandia.ui.screens.LoginScreen
 import com.example.perfulandia.ui.screens.RegisterScreen
@@ -32,7 +31,9 @@ import com.example.perfulandia.ui.screens.PerfumeDetailScreen
 
 import com.example.perfulandia.AppDependencies
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.perfulandia.viewmodel.CreateReviewViewModel
 import com.example.perfulandia.viewmodel.HomeViewModel
+import com.example.perfulandia.viewmodel.OrderViewModel
 import com.example.perfulandia.viewmodel.PerfumeDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,7 +91,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 ForgotPasswordScreen(navController = navController)
             }
             composable(route = Screen.MyOrders.route) {
-                MyOrdersScreen(navController = navController)
+                val orderViewModel: OrderViewModel = viewModel(factory = appDependencies.orderViewModelFactory)
+                MyOrdersScreen(navController = navController, viewModel = orderViewModel)
             }
 
             // PANTALLAS NUEVAS
@@ -104,9 +106,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
 
             // Admin
-            composable(route = Screen.AdminDashboard.route) { // Ruta añadida
-                AdminDashboardScreen(navController = navController)
-            }
             composable(route = Screen.CreatePerfume.route) {
                 CreatePerfumeScreen(navController = navController)
             }
@@ -126,7 +125,14 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             composable(route = Screen.CreateReview.route) { backStackEntry ->
                 val perfumeId = backStackEntry.arguments?.getString("perfumeId")
-                CreateReviewScreen(navController = navController, perfumeId = perfumeId)
+                if (perfumeId != null) {
+                    val createReviewViewModel: CreateReviewViewModel = viewModel(factory = appDependencies.createReviewViewModelFactory)
+                    CreateReviewScreen(
+                        navController = navController,
+                        perfumeId = perfumeId,
+                        viewModel = createReviewViewModel
+                    )
+                }
             }
         }
     }
