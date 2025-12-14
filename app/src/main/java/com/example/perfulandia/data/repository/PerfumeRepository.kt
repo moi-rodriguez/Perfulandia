@@ -36,4 +36,28 @@ class PerfumeRepository(
             Result.failure(e)
         }
     }
+
+    /**
+     * Obtiene un solo perfume por su ID.
+     * Usado en: PerfumeDetailScreen (PerfumeDetailViewModel)
+     */
+    suspend fun getPerfumeById(perfumeId: String): Result<Perfume> {
+        return try {
+            val response = api.getPerfumeById(perfumeId)
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    val perfumeDomain = PerfumeMapper.fromDto(body.data)
+                    Result.success(perfumeDomain)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Error al obtener el perfume"))
+                }
+            } else {
+                Result.failure(Exception("Error del servidor: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

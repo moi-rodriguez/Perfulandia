@@ -13,15 +13,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.perfulandia.AppDependencies
 import com.example.perfulandia.ui.screens.AdminDashboardScreen
 import com.example.perfulandia.ui.screens.HomeScreen
 import com.example.perfulandia.ui.screens.LoginScreen
-import com.example.perfulandia.ui.screens.ManageUsersScreen
 import com.example.perfulandia.ui.screens.RegisterScreen
 import com.example.perfulandia.ui.screens.ProfileScreen
 import com.example.perfulandia.data.local.SessionManager
@@ -33,12 +30,17 @@ import com.example.perfulandia.ui.screens.MyOrdersScreen
 import com.example.perfulandia.ui.screens.OrderSuccessScreen
 import com.example.perfulandia.ui.screens.PerfumeDetailScreen
 
+import com.example.perfulandia.AppDependencies
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.perfulandia.viewmodel.HomeViewModel
+import com.example.perfulandia.viewmodel.PerfumeDetailViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val context = LocalContext.current
-    val dependencies = AppDependencies.getInstance(context)
+    val appDependencies = remember { AppDependencies.getInstance(context) }
 
     // Estado para controlar la pantalla de inicio
     var startDestination by remember { mutableStateOf(Screen.Login.route) }
@@ -75,10 +77,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 LoginScreen(navController = navController)
             }
             composable(route = Screen.Home.route) {
-                HomeScreen(
-                    navController = navController,
-                    viewModel = viewModel(factory = dependencies.homeViewModelFactory)
-                )
+                val homeViewModel: HomeViewModel = viewModel(factory = appDependencies.homeViewModelFactory)
+                HomeScreen(navController = navController, viewModel = homeViewModel)
             }
             composable(route = Screen.Profile.route) {
                 ProfileScreen(navController = navController)
@@ -104,20 +104,24 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
 
             // Admin
-            composable(route = Screen.AdminDashboard.route) { 
+            composable(route = Screen.AdminDashboard.route) { // Ruta añadida
                 AdminDashboardScreen(navController = navController)
             }
             composable(route = Screen.CreatePerfume.route) {
                 CreatePerfumeScreen(navController = navController)
             }
-            composable(route = Screen.ManageUsers.route) { 
-                ManageUsersScreen(navController = navController) // Corrected
-            }
 
             // Rutas con Argumentos
             composable(route = Screen.PerfumeDetail.route) { backStackEntry ->
                 val perfumeId = backStackEntry.arguments?.getString("perfumeId")
-                PerfumeDetailScreen(navController = navController, perfumeId = perfumeId)
+                if (perfumeId != null) {
+                    val perfumeDetailViewModel: PerfumeDetailViewModel = viewModel(factory = appDependencies.perfumeDetailViewModelFactory)
+                    PerfumeDetailScreen(
+                        navController = navController,
+                        perfumeId = perfumeId,
+                        viewModel = perfumeDetailViewModel
+                    )
+                }
             }
 
             composable(route = Screen.CreateReview.route) { backStackEntry ->
