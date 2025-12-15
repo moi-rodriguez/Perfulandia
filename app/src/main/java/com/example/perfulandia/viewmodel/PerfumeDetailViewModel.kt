@@ -22,7 +22,8 @@ data class PerfumeDetailUiState(
     val reviews: List<Review> = emptyList(), // Lista de reseñas
     val error: String? = null,
     val navigateToLogin: Boolean = false, // Evento para navegar al login
-    val showAddedToCartMessage: Boolean = false // Evento para mostrar mensaje
+    val showAddedToCartMessage: Boolean = false, // Evento para mostrar mensaje
+    val showLoginRequiredMessage: Boolean = false // Evento para mostrar mensaje de login requerido
 )
 
 class PerfumeDetailViewModel(
@@ -70,10 +71,10 @@ class PerfumeDetailViewModel(
      */
     fun onAddToCartClicked() {
         viewModelScope.launch {
-            val token = sessionManager.getAuthToken()
-            if (token.isNullOrEmpty()) {
-                // Usuario es invitado, necesita loguearse
-                _uiState.update { it.copy(navigateToLogin = true) }
+            val userEmail = sessionManager.getUserEmail()
+            if (userEmail == "invitado@sistema.com") {
+                // Usuario es invitado, mostrar mensaje y luego navegar
+                _uiState.update { it.copy(showLoginRequiredMessage = true) }
             } else {
                 // Usuario es cliente, agregar al carrito
                 uiState.value.perfume?.let { perfume ->
@@ -83,6 +84,20 @@ class PerfumeDetailViewModel(
                 }
             }
         }
+    }
+
+    /**
+     * Resetea el evento de mensaje de login requerido para que no se muestre múltiples veces.
+     */
+    fun onLoginRequiredMessageShown() {
+        _uiState.update { it.copy(showLoginRequiredMessage = false) }
+    }
+
+    /**
+     * Solicita la navegación al login después de que el mensaje haya sido mostrado.
+     */
+    fun requestLoginNavigation() {
+        _uiState.update { it.copy(navigateToLogin = true) }
     }
 
     /**

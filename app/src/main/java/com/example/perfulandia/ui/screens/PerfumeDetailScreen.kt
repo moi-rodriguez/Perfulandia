@@ -47,11 +47,20 @@ fun PerfumeDetailScreen(
         }
     }
 
+    // Observar el evento para mostrar el Snackbar de login requerido
+    LaunchedEffect(uiState.showLoginRequiredMessage) {
+        if (uiState.showLoginRequiredMessage) {
+            snackbarHostState.showSnackbar("Debes iniciar sesión para comprar. Redirigiendo a Login...")
+            viewModel.onLoginRequiredMessageShown() // Resetear el evento del mensaje
+            viewModel.requestLoginNavigation() // Solicitar navegación al login
+        }
+    }
+
     // Observar el evento de navegación al login
     LaunchedEffect(uiState.navigateToLogin) {
         if (uiState.navigateToLogin) {
             navController.navigate(Screen.Login.route)
-            viewModel.onNavigationHandled() // Resetear el evento
+            viewModel.onNavigationHandled() // Resetear el evento de navegación
         }
     }
 
