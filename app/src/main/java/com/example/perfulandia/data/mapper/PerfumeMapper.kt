@@ -66,4 +66,25 @@ object PerfumeMapper {
     fun fromDtoList(dtoList: List<PerfumeDto>): List<Perfume> {
         return dtoList.map { fromDto(it) }
     }
+
+    /**
+     * Convierte un objeto Perfume (modelo de dominio) a PerfumeDto (para enviar a la API)
+     */
+    fun toDto(perfume: Perfume): PerfumeDto {
+        return PerfumeDto(
+            _id = if (perfume.id.isNotEmpty()) perfume.id else null,
+            nombre = perfume.nombre,
+            marca = perfume.marca,
+            fragancia = perfume.fragancia,
+            tamano = perfume.tamano,
+            genero = perfume.genero,
+            precio = perfume.precio,
+            stock = perfume.stock,
+            // La API espera solo el ID de la categoría como String
+            categoria = perfume.categoriaId,
+            descripcion = perfume.descripcion,
+            imagen = perfume.imagen,
+            imagenThumbnail = perfume.imagenThumbnail
+        )
+    }
 }

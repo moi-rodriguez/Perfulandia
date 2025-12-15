@@ -60,4 +60,28 @@ class PerfumeRepository(
             Result.failure(e)
         }
     }
+
+    /**
+     * Crea un nuevo perfume.
+     */
+    suspend fun createPerfume(perfume: Perfume): Result<Perfume> {
+        return try {
+            val perfumeDto = PerfumeMapper.toDto(perfume)
+            val response = api.createPerfume(perfumeDto)
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    val newPerfume = PerfumeMapper.fromDto(body.data)
+                    Result.success(newPerfume)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Error al crear el perfume"))
+                }
+            } else {
+                Result.failure(Exception("Error del servidor: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
