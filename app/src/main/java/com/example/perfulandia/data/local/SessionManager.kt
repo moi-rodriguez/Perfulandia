@@ -91,6 +91,15 @@ class SessionManager(private val context: Context) {
     }
 
     /**
+     * Obtiene el ID del usuario
+     */
+    suspend fun getUserId(): String? {
+        return context.dataStore.data
+            .map { preferences -> preferences[KEY_USER_ID] }
+            .first()
+    }
+
+    /**
      * Obtiene el email del usuario
      */
     suspend fun getUserEmail(): String? {

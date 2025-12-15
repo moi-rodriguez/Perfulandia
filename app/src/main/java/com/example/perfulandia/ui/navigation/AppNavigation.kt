@@ -20,7 +20,6 @@ import com.example.perfulandia.ui.screens.HomeScreen
 import com.example.perfulandia.ui.screens.LoginScreen
 import com.example.perfulandia.ui.screens.RegisterScreen
 import com.example.perfulandia.ui.screens.ProfileScreen
-import com.example.perfulandia.data.local.SessionManager
 import com.example.perfulandia.ui.screens.CartScreen
 import com.example.perfulandia.ui.screens.CreatePerfumeScreen
 import com.example.perfulandia.ui.screens.CreateReviewScreen
@@ -47,11 +46,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     var startDestination by remember { mutableStateOf(Screen.Login.route) }
     var isCheckingSession by remember { mutableStateOf(true) }
 
-    // Verificación de sesión al iniciar
-    LaunchedEffect(Unit) {
-        val sessionManager = SessionManager(context)
-        val token = sessionManager.getAuthToken()
-
+                // Verificación de sesión al iniciar
+                LaunchedEffect(Unit) {
+                    val token = appDependencies.sessionManager.getAuthToken()
         // Si hay token, navega a Home. Si no, a Login
         startDestination = if (token.isNullOrEmpty()) {
             Screen.Login.route
@@ -99,7 +96,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             // Carrito y Compra
             composable(route = Screen.Cart.route) {
-                CartScreen(navController = navController)
+                CartScreen(navController = navController, viewModel = appDependencies.cartViewModel)
             }
             composable(route = Screen.OrderSuccess.route) {
                 OrderSuccessScreen(navController = navController)

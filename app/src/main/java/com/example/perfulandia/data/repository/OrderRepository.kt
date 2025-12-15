@@ -34,9 +34,9 @@ class OrderRepository(private val orderApi: OrderApi) {
     /**
      * Envía un nuevo pedido al backend
      */
-    suspend fun checkout(items: List<OrderItemDto>, total: Double): Result<Unit> {
+    suspend fun checkout(clientId: String, items: List<OrderItemDto>, total: Double): Result<Unit> {
         return try {
-            val orderDto = OrderDto(items = items, total = total)
+            val orderDto = OrderDto(cliente = clientId, items = items, total = total)
             val response = orderApi.createOrder(orderDto)
             if (response.isSuccessful && response.body()?.success == true) {
                 Result.success(Unit)
