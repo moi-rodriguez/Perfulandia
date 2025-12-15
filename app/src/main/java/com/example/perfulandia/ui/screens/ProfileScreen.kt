@@ -34,6 +34,7 @@ import com.example.perfulandia.viewmodel.ProfileViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -44,9 +45,11 @@ fun ProfileScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     // Obtención de dependencias del grafo de la aplicación.
     val dependencies = remember { AppDependencies.getInstance(context) }
+    val sessionManager = dependencies.sessionManager
 
     // Inicialización del ViewModel con inyección manual de dependencias.
     val viewModel: ProfileViewModel = viewModel(
@@ -67,7 +70,7 @@ fun ProfileScreen(
 
     // Configuración del Bottom Bar
     val items = listOf(Screen.Home, Screen.Profile)
-    var selectedItem by remember { mutableIntStateOf(1) } // 1 es Profile
+    var selectedItem by remember { mutableStateOf(1) } // 1 es Profile
 
     // --- Permisos ---
     val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -148,6 +151,16 @@ fun ProfileScreen(
         if (uiState.isLoggedOut) {
             navController.navigate(Screen.Login.route) {
                 popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
+    // Efecto para verificar la sesión al entrar en la pantalla
+    LaunchedEffect(Unit) {
+        val isLoggedIn = sessionManager.getAuthToken() != null
+        if (!isLoggedIn) {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.Home.route) { inclusive = true }
             }
         }
     }
@@ -257,11 +270,27 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
+            // Botón "Mis pedidos"
+            Button(
+                onClick = { navController.navigate(Screen.MyOrders.route) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+            ) {
+                Text("Mis pedidos")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // Botón Cerrar sesión
             Button(
                 onClick = {
-                    viewModel.logout()
-                    // La navegación se maneja en el LaunchedEffect arriba
+                   coroutineScope.launch {
+                        sessionManager.clearSession()
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
