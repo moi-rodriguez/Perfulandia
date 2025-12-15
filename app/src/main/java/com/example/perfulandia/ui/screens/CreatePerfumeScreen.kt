@@ -8,20 +8,26 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.perfulandia.model.Category
 import com.example.perfulandia.ui.navigation.Screen
+import com.example.perfulandia.viewmodel.CreatePerfumeViewModel
+import com.example.perfulandia.viewmodel.SubmissionStatus
+import kotlinx.coroutines.delay
+import androidx.compose.material3.MenuAnchorType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreatePerfumeScreen(
     navController: NavController,
-    // viewModel: CreatePerfumeViewModel = viewModel() // Will be enabled later
+    viewModel: CreatePerfumeViewModel
 ) {
-    // val uiState by viewModel.uiState.collectAsState()
-    val categories = listOf("Amaderada", "Aromática", "Cítrica", "Floral", "Oriental")
+    val uiState by viewModel.uiState.collectAsState()
+    val categories = uiState.categories
+
     var perfumeName by remember { mutableStateOf("") }
     var brand by remember { mutableStateOf("") }
     var fragrance by remember { mutableStateOf("") }
@@ -29,11 +35,36 @@ fun CreatePerfumeScreen(
     var gender by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var stock by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf(categories[0]) }
+    var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var description by remember { mutableStateOf("") }
     var imageUrl by remember { mutableStateOf("") }
-    var showSuccessMessage by remember { mutableStateOf(false) }
-    var isSubmitting by remember { mutableStateOf(false) }
+    
+    var validationError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(categories) {
+        if (categories.isNotEmpty() && selectedCategory == null) {
+            selectedCategory = categories[0]
+        }
+    }
+
+    LaunchedEffect(uiState.submissionStatus) {
+        if (uiState.submissionStatus == SubmissionStatus.SUCCESS) {
+            delay(2000) // Keep success message for 2 seconds
+            // Clear form
+            perfumeName = ""
+            brand = ""
+            fragrance = ""
+            size = ""
+            gender = ""
+            price = ""
+            stock = ""
+            selectedCategory = categories.getOrNull(0)
+            description = ""
+            imageUrl = ""
+            // Reset state in ViewModel
+            viewModel.resetSubmissionStatus()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -41,7 +72,7 @@ fun CreatePerfumeScreen(
                 title = { Text("Crear Nuevo Perfume") },
                 actions = {
                     Button(onClick = {
-                        // TODO: Implement actual logout logic with SessionManager
+                        viewModel.logout()
                         navController.navigate(Screen.Login.route) {
                             popUpTo(0) { inclusive = true }
                         }
@@ -66,7 +97,7 @@ fun CreatePerfumeScreen(
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(value = fragrance, onValueChange = { fragrance = it }, label = { Text("Fragancia") }, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(value = size, onValueChange = { size = it }, label = { Text("Tamaño") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = size, onValueChange = { size = it }, label = { Text("Tamaño (ml)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(value = gender, onValueChange = { gender = it }, label = { Text("Género") }, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
@@ -87,11 +118,11 @@ fun CreatePerfumeScreen(
             ) {
                 OutlinedTextField(
                     readOnly = true,
-                    value = selectedCategory,
+                    value = selectedCategory?.nombre ?: "Cargando...",
                     onValueChange = { },
                     label = { Text("Categoría") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                     modifier = Modifier.fillMaxWidth().menuAnchor()
+                    modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable)
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
@@ -99,7 +130,7 @@ fun CreatePerfumeScreen(
                 ) {
                     categories.forEach { category ->
                         DropdownMenuItem(
-                            text = { Text(category) },
+                            text = { Text(category.nombre) },
                             onClick = {
                                 selectedCategory = category
                                 expanded = false
@@ -111,25 +142,51 @@ fun CreatePerfumeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            if (showSuccessMessage) {
+            if (validationError != null) {
+                Text(validationError!!, color = MaterialTheme.colorScheme.error)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
+            if (uiState.submissionStatus == SubmissionStatus.SUCCESS) {
                 Text("¡Perfume creado con éxito!", color = MaterialTheme.colorScheme.primary)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
+            if (uiState.submissionStatus == SubmissionStatus.ERROR && uiState.error != null) {
+                Text("Error: ${uiState.error}", color = MaterialTheme.colorScheme.error)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             Button(
                 onClick = {
-                    isSubmitting = true
-                    // TODO: Call ViewModel to send POST request
-                    // viewModel.createPerfume(...)
-                    // For now, just simulating a successful creation
-                    showSuccessMessage = true
-                    isSubmitting = false
+                    validationError = null
+                    val priceDouble = price.toDoubleOrNull()
+                    val stockInt = stock.toIntOrNull()
+                    val sizeInt = size.toIntOrNull()
+                    val categoryId = selectedCategory?.id
+
+                    if (perfumeName.isBlank() || brand.isBlank() || priceDouble == null || stockInt == null || categoryId == null) {
+                        validationError = "Por favor, rellena todos los campos obligatorios."
+                    } else {
+                        viewModel.createPerfume(
+                            nombre = perfumeName,
+                            marca = brand,
+                            fragancia = fragrance,
+                            tamano = sizeInt,
+                            genero = gender,
+                            precio = priceDouble,
+                            stock = stockInt,
+                            categoriaId = categoryId,
+                            descripcion = description,
+                            imagen = imageUrl
+                        )
+                    }
                 },
-                enabled = !isSubmitting,
+                enabled = uiState.submissionStatus != SubmissionStatus.SUBMITTING,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if (isSubmitting) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                if (uiState.submissionStatus == SubmissionStatus.SUBMITTING) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
                 } else {
                     Text("Enviar")
                 }

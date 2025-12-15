@@ -78,6 +78,10 @@ class AppDependencies(context: Context) {
         CreateReviewViewModelFactory(reviewRepository)
     }
 
+    val createPerfumeViewModelFactory by lazy {
+        com.example.perfulandia.viewmodel.CreatePerfumeViewModelFactory(perfumeRepository, categoryRepository, sessionManager)
+    }
+
     companion object {
         @Volatile
         private var INSTANCE: AppDependencies? = null

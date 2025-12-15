@@ -104,7 +104,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             // Admin
             composable(route = Screen.CreatePerfume.route) {
-                CreatePerfumeScreen(navController = navController)
+                val viewModel: com.example.perfulandia.viewmodel.CreatePerfumeViewModel = viewModel(factory = appDependencies.createPerfumeViewModelFactory)
+                CreatePerfumeScreen(navController = navController, viewModel = viewModel)
             }
 
             // Rutas con Argumentos
