@@ -75,15 +75,6 @@ fun LoginScreen(
         }
     }
 
-    LaunchedEffect(uiState.isGuestLogin) {
-        if (uiState.isGuestLogin) {
-            navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
-            }
-            viewModel.resetState()
-        }
-    }
-
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMsg ->
             snackbarHostState.showSnackbar(errorMsg)

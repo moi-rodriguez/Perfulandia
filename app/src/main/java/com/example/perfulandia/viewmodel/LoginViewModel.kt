@@ -22,7 +22,6 @@ data class LoginUiState(
     val error: String? = null, // Error general (ej: de API)
     val isSuccess: Boolean = false, // Flag útil para navegación
     val isAdminLogin: Boolean = false, // Flag para login de admin
-    val isGuestLogin: Boolean = false, // Flag para login de invitado
     val emailError: String? = null,
     val passwordError: String? = null
 )
@@ -94,15 +93,8 @@ class LoginViewModel(
         _uiState.value = _uiState.value.copy(isAdminLogin = true, isLoading = false)
     }
 
-    private fun onGuestLogin() {
-        _uiState.value = _uiState.value.copy(isGuestLogin = true)
-    }
-
     fun loginAsGuest() {
-        viewModelScope.launch {
-            authRepository.logout() // Limpia la sesión
-            onGuestLogin()
-        }
+        login("invitado@sistema.com", "Invitado123456")
     }
 
     /**
