@@ -73,7 +73,8 @@ class PerfumeDetailViewModel(
         viewModelScope.launch {
             val userEmail = sessionManager.getUserEmail()
             if (userEmail == "invitado@sistema.com") {
-                // Usuario es invitado, mostrar mensaje y luego navegar
+                // Usuario es invitado, se cierra su sesión y se le pide que inicie sesión de nuevo.
+                sessionManager.clearSession()
                 _uiState.update { it.copy(showLoginRequiredMessage = true) }
             } else {
                 // Usuario es cliente, agregar al carrito

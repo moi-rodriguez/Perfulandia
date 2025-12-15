@@ -55,7 +55,7 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text("Perfulandia") },
                 actions = {
-                    IconButton(onClick = { /* TODO: Navegar al Carrito */ }) {
+                    IconButton(onClick = { navController.navigate(Screen.Cart.route) }) {
                         Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
                     }
                 }

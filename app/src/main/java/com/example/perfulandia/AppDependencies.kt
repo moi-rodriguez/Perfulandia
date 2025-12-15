@@ -58,7 +58,7 @@ class AppDependencies(context: Context) {
     // Se crea una instancia única (singleton) de CartViewModel para que el estado del
     // carrito se comparta entre todas las pantallas que lo necesiten (Detail, Cart, etc.).
     val cartViewModel: CartViewModel by lazy {
-        CartViewModel()
+        CartViewModel(orderRepository, sessionManager)
     }
 
     // Se proporcionan las fábricas para los ViewModels que tienen dependencias.
