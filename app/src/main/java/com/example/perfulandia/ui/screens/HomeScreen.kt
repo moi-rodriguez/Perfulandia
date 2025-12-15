@@ -182,16 +182,6 @@ fun PerfumeCard(perfume: Perfume, onClick: (String) -> Unit) {
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = { },
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) {
-                Text("Ver", fontSize = 12.sp)
-            }
         }
     }
 }
