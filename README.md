@@ -1,22 +1,61 @@
 # Perfulandia App
 
-## 1. Caso elegido y alcance
+Bienvenido al repositorio, esto es una aplicción móvil nativa Android desarrollada en Kotlin y Jetpack Compose para la compra y gestión de perfumes.
 
-- **Caso:** Perfulandia SPA / App de e-commerce especializada en perfumes
-  
-- **Alcance EP3:** Diseño/UI, validaciones, navegación, estado, persistencia, recursos nativos, animaciones
+## Integrantes del equipo
 
-## 2. Requisitos y ejecución
+* Moises Rodriguez
+* Diego Jaramillo
 
-- **Stack:** 
-  - Framework: Android Studio con lenguaje Kotlin y Jetpack compose
-  - Librerías:
-    - Retrofit / Gson: Consumo de API REST
-    - Coil: carga de imágenes (avatar)
-    - Accompanist Permissions: manejo de permisos
-    - DataStore: persistencia de sesión y avatar
-    - Navigation Compose: navegación
-    - Material3: interfaz moderna y responsiva.
+## Funcionalidades
+
+* **Autenticación de Usuarios:**
+  * Inicio de sesión (para cliente, admin e invitado).
+  * Registro de nuevos usuarios.
+  * Recuperación de contraseña (no funcional).
+* **Catálogo de Productos:**
+  * Visualización de perfumes destacados en el Home.
+  * Filtrado por categorías.
+  * Detalle profundo de cada perfume (imágenes, precio, descripción...).
+* **Gestión de Compras:**
+  * Carrito de compras (Agregar, eliminar, ver total).
+  * Proceso de Checkout y confirmación de orden.
+  * Historial de "Mis Órdenes".
+* **Interacción Social:**
+  * Creación de reseñas y valoraciones para los productos.
+* **Perfil:**
+  * Gestión de datos de usuario y avatar.
+* **Administración:**
+  * Creación de nuevos perfumes (Pantalla de usuario Admin).
+* **Persistencia local** (CRUD) y **almacenamiento de imagen de perfil**
+  * DataStore guarda token de sesión y URI (dirección de archivo) de avatar, persisten al cerrar la aplicación.
+  *Al cerrar sesión, se borra la info guardada
+* **Recursos nativos**: cámara/galería (permisos y fallback)
+  * Accesos a recursos con permisos dinámicos gracias al modificar AndroidManifest
+  * Selección o captura de imagen como avatar de usuario
+
+## Endpoints Usados
+
+La aplicación se comunica con una API REST (Microservicios).
+No se utilizan APIs públicas externas, todo es gestionado por el backend propio.
+A continuación, se detallan los endpoints principales utilizados en la capa de datos:
+
+* **Auth:**
+  * `POST /auth/login` - Iniciar sesión.
+  * `POST /auth/register` - Registrar usuario.
+* **Perfumes:**
+  * `GET /perfumes` - Obtener lista de perfumes.
+  * `GET /perfumes/{id}` - Obtener detalle.
+  * `POST /perfumes` - Crear perfume.
+* **Categorías:**
+  * `GET /categories` - Listar categorías disponibles.
+* **Órdenes:**
+  * `POST /orders` - Generar una nueva orden de compra.
+  * `GET /orders/my-orders` - Historial de usuario.
+* **Reseñas (Reviews):**
+  * `POST /reviews` - Publicar una reseña.
+
+## Instrucciones para ejecutar el proyecto
 
 - **Instalación:**
   1. Clonar el repositorio
@@ -25,127 +64,15 @@
 
 - **Ejecución:**
   - Desde Android Studio hacer clic en "Run App"
-  - Emulador o dispositivo físico con Android 8.0 o superior (en mi caso, use mi telefono y le active la opción de "Depuración por USB")
+  - Emulador o dispositivo físico con Android 8.0 o superior (en nuestro caso, usamos mi telefono android y le active la opción de "Depuración por USB")
 
-## 3. Arquitectura y flujo
+### APK firmado y ubicación del archivo .jks
+* **APK Firmado (Descarga directa):** https://github.com/moi-rodriguez/Perfulandia/releases/download/0.1.0/app-release.apk
+* **Ubicación archivo .jks:** https://github.com/moi-rodriguez/Perfulandia/blob/main/keystore1
 
-- **Estructura carpetas**:
-  
-  ├── Manifest/ (AndroidManifest)
-  
-  ├── data/
-  
-  │   ├── local/ (SessionManager)
-  
-  │   ├── remote/ (ApiService, DTOs)
-  
-  │   └── repository/ (UserRepository, AvatarRepository)
-  
-  ├── ui/
-  
-  │   ├── screens/ (Login, Signup, Home, Profile)
-  
-  │   ├── components/ (ImagePickerDialog)
-  
-  │   └── navigation/ (AppNavigation, Screen)
-  
-  ├── viewmodel/ (LoginViewModel, SignupViewModel, ProfileViewModel)
-  
-  AppDependencies
-  
-  MainActivity
+### Código fuente de microservicios y app móvil.
+* **Repositorio App Móvil (Este repositorio):** https://github.com/moi-rodriguez/Perfulandia
+* **Repositorio Backend (Microservicios):** https://github.com/roberto-arce-dev/perfulandia-api
 
-- **Gestión de estado**:
-  - Estrategia local
-  - Los estados reflejan carga/exito/error en la UI
-
-- **Navegación**:
-  - Estructura stack con cuatro rutas principales: Login, Signup, Home y Profile
-  - Verifica sesión activa al iniciar y redirige a Home si el usurio ya tiene token guardado
-
-## 4. Funcionalidades
-
-- **Formulario validado (registro/otra entidad)**
-  - Login con validación de formato de email y contraseña
-  - Registro con validación de nombre, correo y contraseña segura (mínimo 8 caracteres, una letra y un número)
-
-- **Navegación y backstack**
-  - 1. Login - 2. Home - 3. Profile
-  - Home y Profile accesibles mediante NavBar inferior
-  
-- **Gestión de estado (carga/éxito/error)**
-  - Uso de StateFlow para mostrar animaciones de carga, errores y estados de éxito.
-
-- **Persistencia local** (CRUD) y **almacenamiento de imagen de perfil**
-  - DataStore guarda token de sesión y URI (dirección de archivo) de avatar, persisten al cerrar la aplicación.
-  - Al cerrar sesión, se borra la info guardada
-  
-- **Recursos nativos**: cámara/galería (permisos y fallback)
-  - Accesos a recursos con permisos dinámicos gracias al modificar AndroidManifest
-  - Selección o captura de imagen como avatar de usuario
-
-- **Animaciones** con propósito
-  - Animación de carga inicial (loader con delay)
-  - Transiciones suaves entre pantallas
-  
-- **Consumo de API** (incluye `/me`)
-  - Endpoints /auth/signup, /auth/login, /auth/me
-  - Autenticación JWT automática con AuthInterceptor
-
-## 5. Endpoints
-
-  **Base URL:** `https://x8ki-letl-twmt.n7.xano.io/api:Rfm_61dW`
-
-  1. POST /auth/login (login en retrieve an auth token) 
-Parameters example: 
-{
-  "email": "user@example.com",
-  "password": "string"
-}
-Responses: 
-{
-  "authToken": "string",
-  "user_id": "string"
-}
-
-2. GET /auth/me (Get the user record belonging to the authentication token)
-Parameters example: 
-{
-  "id": 0,
-  "created_at": "now",
-  "name": "string",
-  "email": "user@example.com",
-  "account_id": 0,
-  "role": "admin"
-}
-
-3. POST /auth/signup (Signup and retrieve an authentication token) 
-Parameters example: 
-{
-  "name": "string",
-  "email": "user@example.com",
-  "password": "string"
-}
-Responses:
-{
-  "authToken": "string",
-  "user_id": "string"
-}
-
-## 6. User flows
-
-- Descripción del flujo principal:
-  1. Usuario abre la app -> pantalla de carga 3s
-  2. Si hay token -> Home; si no -> Login
-  3. Desde Login puede registrarse o iniciar sesión
-  4. Tras login o signup exitoso -> Home
-  5. Desde Home puede ir a Perfil
-  6. En Perfil:
-     - cambiar avatar (cámara o galería)
-     - ver su nombre y correo
-     - y cerrar sesión (borra token y avatar)
-
-- Casos de error:
-  - Campos vacíos o inválidos -> mensajes de error locales
-  - Credenciales incorrectas -> mensajes según código HTTP
-  - Token expirado -> redirección a Login
+### Evidencia de Trabajo Colaborativo
+* **Historial de Commits:** https://github.com/moi-rodriguez/Perfulandia/commits/main/
